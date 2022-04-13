@@ -10,6 +10,11 @@ import {
 
 import tailwindStylesheetUrl from "./styles/tailwind.css";
 
+// @ts-ignore
+BigInt.prototype.toJSON = function () {
+  return this.toString();
+};
+
 export const links: LinksFunction = () => {
   return [{ rel: "stylesheet", href: tailwindStylesheetUrl }];
 };

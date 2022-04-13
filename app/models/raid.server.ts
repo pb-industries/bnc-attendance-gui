@@ -4,15 +4,9 @@ import { prisma } from "~/db.server";
 
 export type { raid } from "@prisma/client";
 
-export function getRaid({ id }: Pick<raid, "id">) {
-  return prisma.raid.findFirst({
-    where: { id },
-  });
-}
-
-export function getRaidDetails({ id }: Pick<raid, "id">) {
-  return prisma.raid.findFirst({
-    where: { id },
+export async function getRaid({ id }: Pick<raid, "id">) {
+  const details = await prisma.raid.findFirst({
+    where: { id: BigInt(id) as unknown as number },
     include: {
       player_raid: {
         include: {
@@ -21,10 +15,12 @@ export function getRaidDetails({ id }: Pick<raid, "id">) {
       },
     },
   });
+  console.log(details);
+  return details;
 }
 
-export function getRaids({ skip, take }: { skip: number; take: number }) {
-  return prisma.raid.findMany({
+export async function getRaids({ skip, take }: { skip: number; take: number }) {
+  return await prisma.raid.findMany({
     skip,
     take,
     orderBy: { created_at: "desc" },
