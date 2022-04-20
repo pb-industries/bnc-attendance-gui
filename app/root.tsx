@@ -1,4 +1,5 @@
 import type { LinksFunction, MetaFunction } from "@remix-run/node";
+import Shell from './shell'
 import {
   Links,
   LiveReload,
@@ -21,7 +22,7 @@ export const links: LinksFunction = () => {
 
 export const meta: MetaFunction = () => ({
   charset: "utf-8",
-  title: "Remix Notes",
+  title: "Big Natural Crits",
   viewport: "width=device-width,initial-scale=1",
 });
 
@@ -33,7 +34,7 @@ export default function App() {
         <Links />
       </head>
       <body className="h-full">
-        <Outlet />
+        <Shell />
         <ScrollRestoration />
         <Scripts />
         <LiveReload />
