@@ -161,95 +161,93 @@ export default function IndexRoute() {
           }}
         />
       </div>
-      <div>
-        <table>
-          <thead className="bg-gray-50">
-            <tr>
-              <th
-                scope="col"
-                className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+      <table className="mt-4 min-w-full py-4 px-12">
+        <thead className="bg-gray-50">
+          <tr>
+            <th
+              scope="col"
+              className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+            >
+              <button
+                className="text-sm font-semibold text-gray-900"
+                type="button"
+                onClick={() => requestSort("name")}
               >
-                <button
-                  className="text-sm font-semibold text-gray-900"
-                  type="button"
-                  onClick={() => requestSort("name")}
-                >
-                  Name{renderSortIndicator("name")}
-                </button>
-              </th>
-              <th
-                scope="col"
-                className="hidden px-3 py-3.5 text-right text-sm font-semibold text-gray-900 lg:table-cell"
+                Name{renderSortIndicator("name")}
+              </button>
+            </th>
+            <th
+              scope="col"
+              className="hidden px-3 py-3.5 text-right text-sm font-semibold text-gray-900 lg:table-cell"
+            >
+              <button
+                className="text-sm font-semibold text-gray-900"
+                type="button"
+                onClick={() => requestSort("attendance_30")}
               >
-                <button
-                  className="text-sm font-semibold text-gray-900"
-                  type="button"
-                  onClick={() => requestSort("attendance_30")}
-                >
-                  Attendance 30 days{renderSortIndicator("attendance_30")}
-                </button>
-              </th>
-              <th
-                scope="col"
-                className="hidden px-3 py-3.5 text-right text-sm font-semibold text-gray-900 sm:table-cell"
+                Attendance 30 days{renderSortIndicator("attendance_30")}
+              </button>
+            </th>
+            <th
+              scope="col"
+              className="hidden px-3 py-3.5 text-right text-sm font-semibold text-gray-900 sm:table-cell"
+            >
+              <button
+                className="text-sm font-semibold text-gray-900"
+                type="button"
+                onClick={() => requestSort("attendance_60")}
               >
-                <button
-                  className="text-sm font-semibold text-gray-900"
-                  type="button"
-                  onClick={() => requestSort("attendance_60")}
-                >
-                  Attendance 60 days{renderSortIndicator("attendance_60")}
-                </button>
-              </th>
-              <th
-                scope="col"
-                className="hidden px-3 py-3.5 text-right text-sm font-semibold text-gray-900 sm:table-cell"
+                Attendance 60 days{renderSortIndicator("attendance_60")}
+              </button>
+            </th>
+            <th
+              scope="col"
+              className="hidden px-3 py-3.5 text-right text-sm font-semibold text-gray-900 sm:table-cell"
+            >
+              <button
+                className="text-sm font-semibold text-gray-900"
+                type="button"
+                onClick={() => requestSort("attendance_90")}
               >
-                <button
-                  className="text-sm font-semibold text-gray-900"
-                  type="button"
-                  onClick={() => requestSort("attendance_90")}
-                >
-                  Attendance 90 days{renderSortIndicator("attendance_90")}
-                </button>
-              </th>
-              <th
-                scope="col"
-                className="px-3 py-3.5 text-right text-sm font-semibold text-gray-900"
+                Attendance 90 days{renderSortIndicator("attendance_90")}
+              </button>
+            </th>
+            <th
+              scope="col"
+              className="px-3 py-3.5 text-right text-sm font-semibold text-gray-900"
+            >
+              <button
+                className="h-full text-sm font-semibold text-gray-900"
+                type="button"
+                onClick={() => requestSort("attendance_life")}
               >
-                <button
-                  className="h-full text-sm font-semibold text-gray-900"
-                  type="button"
-                  onClick={() => requestSort("attendance_life")}
-                >
-                  Attendance life{renderSortIndicator("attendance_life")}
-                </button>
-              </th>
+                Attendance life{renderSortIndicator("attendance_life")}
+              </button>
+            </th>
+          </tr>
+        </thead>
+        <tbody className="bg-white">
+          {sortedMainData.map((main) => (
+            <tr key={main.name}>
+              <td className="whitespace-nowrap px-3 py-4 text-sm capitalize text-gray-500">
+                {main.name}
+              </td>
+              <td className="whitespace-nowrap px-3 py-4 text-right text-sm text-gray-500">
+                {main.attendance_30 ?? 0}%
+              </td>
+              <td className="whitespace-nowrap px-3 py-4 text-right text-sm text-gray-500">
+                {main.attendance_60 ?? 0}%
+              </td>
+              <td className="whitespace-nowrap px-3 py-4 text-right text-sm text-gray-500">
+                {main.attendance_90 ?? 0}%
+              </td>
+              <td className="whitespace-nowrap px-3 py-4 text-right text-sm text-gray-500">
+                {main.attendance_life ?? 0}%
+              </td>
             </tr>
-          </thead>
-          <tbody className="bg-white">
-            {sortedMainData.map((main) => (
-              <tr key={main.name}>
-                <td className="whitespace-nowrap px-3 py-4 text-sm capitalize text-gray-500">
-                  {main.name}
-                </td>
-                <td className="whitespace-nowrap px-3 py-4 text-right text-sm text-gray-500">
-                  {main.attendance_30 ?? 0}%
-                </td>
-                <td className="whitespace-nowrap px-3 py-4 text-right text-sm text-gray-500">
-                  {main.attendance_60 ?? 0}%
-                </td>
-                <td className="whitespace-nowrap px-3 py-4 text-right text-sm text-gray-500">
-                  {main.attendance_90 ?? 0}%
-                </td>
-                <td className="whitespace-nowrap px-3 py-4 text-right text-sm text-gray-500">
-                  {main.attendance_life ?? 0}%
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          ))}
+        </tbody>
+      </table>
     </main>
   );
 }

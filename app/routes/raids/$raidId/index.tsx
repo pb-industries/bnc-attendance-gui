@@ -31,7 +31,7 @@ export default function raidIdPage() {
     typeof window === "undefined" ? 800 : window.innerWidth - 100
   );
   const [options, setOptions] = useState<HighchartsData>({
-    title: { text: "Attendance" },
+    title: { text: "Attendance and box distribution" },
     xAxis: { categories: [], crosshair: true },
     series: [],
   });
