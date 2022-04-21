@@ -27,7 +27,7 @@ export async function getRaid({ id }: Pick<raid, "id">) {
   const { player_raid, ...raid } = details ?? {};
   let maxTick = 0;
   details?.player_raid.forEach(({ raid_hour }) => {
-    maxTick = Math.max(raid_hour, maxTick);
+    maxTick = Math.max(parseInt(`${raid_hour}`), maxTick);
   });
 
   const attendees: {
@@ -57,16 +57,19 @@ export async function getRaid({ id }: Pick<raid, "id">) {
     }
 
     if (mainName !== null) {
-      attendees[playerId].ticks[raid_hour].add(mainName);
+      attendees[playerId].ticks?.[raid_hour]?.add(mainName);
     }
 
     if (player?.name) {
-      attendees[playerId].ticks[raid_hour].add(player.name);
+      attendees[playerId].ticks?.[raid_hour]?.add(player.name);
     }
   });
 
   const parsedAttendees = Object.values(attendees).map(
     ({ ticks, ...attendee }) => {
+      if (attendee.name == "karadin") {
+        console.log("Got ticks", ticks);
+      }
       const newTicks: { [key: string]: string[] } = {};
       Object.keys(ticks).forEach((key) => {
         newTicks[key] = Array.from(ticks[key]);
@@ -111,6 +114,7 @@ export async function getRaids({
     LEFT JOIN player_alt pa ON pa.alt_id = pr.player_id
     LEFT JOIN player p on pr.player_id = p.id
     GROUP BY r.id
+    ORDER BY r.created_at DESC
     LIMIT ${parseInt(`${pageSize}`)}
     OFFSET ${parseInt(`${page * pageSize}`)}
   `;

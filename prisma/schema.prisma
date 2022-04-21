@@ -8,33 +8,34 @@ datasource db {
 }
 
 model knex_migrations {
-  id             Int    @id @default(autoincrement())
+  id             BigInt    @id @default(autoincrement())
   name           String?   @db.VarChar(255)
-  batch          Int?
+  batch          BigInt?
   migration_time DateTime? @db.Timestamptz(6)
 }
 
 model knex_migrations_lock {
-  index     Int  @id @default(autoincrement())
-  is_locked Int?
+  index     BigInt  @id @default(autoincrement())
+  is_locked BigInt?
 }
 
 model player {
   id                                      BigInt        @id @default(autoincrement())
   name                                    String        @unique(map: "player_name_unique") @db.VarChar(255)
-  level                                   Int?       @default(0)
+  level                                   BigInt?       @default(0)
   class                                   String?       @db.VarChar(255)
   attendance_30                           Float?        @db.Real
   attendance_60                           Float?        @db.Real
   attendance_90                           Float?        @db.Real
   attendance_life                         Float?        @db.Real
-  ticks_since_last_win                    Int?       @default(0)
+  ticks_since_last_win                    BigInt?       @default(0)
   created_at                              DateTime?     @default(now()) @db.Timestamptz(6)
   updated_at                              DateTime?     @default(now()) @db.Timestamptz(6)
   player_alt_playerToplayer_alt_alt_id    player_alt[]  @relation("playerToplayer_alt_alt_id")
   player_alt_playerToplayer_alt_player_id player_alt[]  @relation("playerToplayer_alt_player_id")
   player_raid                             player_raid[]
   raffle                                  raffle[]
+  user                                    user[]
 }
 
 model player_alt {
@@ -49,7 +50,7 @@ model player_alt {
 model player_raid {
   player_id  BigInt
   raid_id    BigInt
-  raid_hour  Int
+  raid_hour  BigInt
   created_at DateTime? @default(now()) @db.Timestamptz(6)
   updated_at DateTime? @default(now()) @db.Timestamptz(6)
   player     player    @relation(fields: [player_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "player_raid_player_id_foreign")
@@ -64,7 +65,7 @@ model raffle {
   winner_id    BigInt?
   roll_symbol  String?   @db.VarChar(255)
   item_name    String    @db.VarChar(255)
-  winning_roll Int?
+  winning_roll BigInt?
   created_at   DateTime? @default(now()) @db.Timestamptz(6)
   updated_at   DateTime? @default(now()) @db.Timestamptz(6)
   raid         raid      @relation(fields: [raid_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "raffle_raid_id_foreign")
@@ -81,4 +82,23 @@ model raid {
   raffle      raffle[]
 
   @@unique([created_at, split], map: "raid_created_at_split_unique")
+}
+
+model password {
+  hash       String    @db.VarChar(255)
+  user_id    BigInt    @unique(map: "password_user_id_unique")
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @default(now()) @db.Timestamptz(6)
+  user       user      @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "password_user_id_foreign")
+}
+
+model user {
+  id         BigInt    @id @default(autoincrement())
+  player_id  BigInt
+  email      String?   @unique(map: "user_email_unique") @db.VarChar(255)
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @default(now()) @db.Timestamptz(6)
+  role       String?   @default("member") @db.VarChar(255)
+  player     player    @relation(fields: [player_id], references: [id], onDelete: Cascade, map: "user_player_id_foreign")
+  password   password?
 }

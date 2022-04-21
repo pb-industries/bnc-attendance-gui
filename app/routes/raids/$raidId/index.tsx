@@ -74,14 +74,15 @@ export default function raidIdPage() {
     }
 
     raid.attendees.forEach((attendeeData) => {
-      console.log(attendeeData);
       const seriesDatum: { name: string; data: number[] } = {
         name: attendeeData.name,
         data: [],
       };
       Object.keys(attendeeData.ticks).forEach((tick) => {
         const tickData = attendeeData.ticks[tick];
-        seriesDatum.data.push(tickData.length);
+        if (tickData.length > 0) {
+          seriesDatum.data.push(tickData.length);
+        }
       });
       seriesData.push(seriesDatum);
     });
@@ -90,8 +91,6 @@ export default function raidIdPage() {
       categories,
       crosshair: true,
     };
-    console.log(xAxis);
-    console.log(seriesData);
     setOptions({
       ...options,
       series: seriesData,

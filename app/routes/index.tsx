@@ -86,7 +86,6 @@ export default function IndexRoute() {
         return 0;
       });
     }
-    console.log(sortedMains);
     setSortedMainData(sortedMains);
   }, [mains, sortConfig]);
 
@@ -230,7 +229,13 @@ export default function IndexRoute() {
           {sortedMainData.map((main) => (
             <tr key={main.name}>
               <td className="whitespace-nowrap px-3 py-4 text-sm capitalize text-gray-500">
-                {main.name}
+                <img
+                  className="mr-2 inline-block h-6 w-6 rounded-full"
+                  src={`/images/${main.class}.png`}
+                />
+                <Link className="text-blue-500" to={`/players/${main.id}`}>
+                  {main.name}
+                </Link>
               </td>
               <td className="whitespace-nowrap px-3 py-4 text-right text-sm text-gray-500">
                 {main.attendance_30 ?? 0}%

@@ -17,13 +17,16 @@
 import { Fragment } from "react";
 import { Disclosure, Menu, Transition } from "@headlessui/react";
 import { MenuAlt1Icon, XIcon } from "@heroicons/react/outline";
-import { Link, Outlet } from "@remix-run/react";
+import { Form, Link, Outlet } from "@remix-run/react";
+import { useOptionalUser } from "./utils";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
 }
 
 export default function Shell() {
+  const user = useOptionalUser();
+
   return (
     <>
       {/* Background color split screen for large screens */}
@@ -83,58 +86,80 @@ export default function Shell() {
                         >
                           Roster
                         </Link>
+                        {user ? null : (
+                          <>
+                            <Link
+                              to="/login"
+                              className="rounded-md px-3 py-2 text-sm font-medium text-indigo-200 hover:text-white"
+                            >
+                              Login
+                            </Link>
+                            <Link
+                              to="/register"
+                              className="rounded-md px-3 py-2 text-sm font-medium text-indigo-200 hover:text-white"
+                            >
+                              Register
+                            </Link>
+                          </>
+                        )}
                       </div>
                       {/* Profile dropdown */}
-                      {/* <Menu as="div" className="relative ml-4 flex-shrink-0">
-                        <div>
-                          <Menu.Button className="flex rounded-full bg-indigo-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-700">
-                            <span className="sr-only">Open user menu</span>
-                            <img
-                              className="h-8 w-8 rounded-full"
-                              src="https://images.unsplash.com/photo-1517365830460-955ce3ccd263?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=256&h=256&q=80"
-                              alt=""
-                            />
-                          </Menu.Button>
-                        </div>
-                        <Transition
-                          as={Fragment}
-                          enter="transition ease-out duration-100"
-                          enterFrom="transform opacity-0 scale-95"
-                          enterTo="transform opacity-100 scale-100"
-                          leave="transition ease-in duration-75"
-                          leaveFrom="transform opacity-100 scale-100"
-                          leaveTo="transform opacity-0 scale-95"
-                        >
-                          <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                            <Menu.Item>
-                              {({ active }) => (
-                                <a
-                                  href="#"
-                                  className={classNames(
-                                    active ? "bg-gray-100" : "",
-                                    "block px-4 py-2 text-sm text-gray-700"
-                                  )}
-                                >
-                                  View Profile
-                                </a>
-                              )}
-                            </Menu.Item>
-                            <Menu.Item>
-                              {({ active }) => (
-                                <a
-                                  href="#"
-                                  className={classNames(
-                                    active ? "bg-gray-100" : "",
-                                    "block px-4 py-2 text-sm text-gray-700"
-                                  )}
-                                >
-                                  Logout
-                                </a>
-                              )}
-                            </Menu.Item>
-                          </Menu.Items>
-                        </Transition>
-                      </Menu> */}
+                      {user ? (
+                        <Menu as="div" className="relative ml-4 flex-shrink-0">
+                          <div>
+                            <Menu.Button className="flex rounded-full bg-indigo-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-700">
+                              <span className="sr-only">Open user menu</span>
+                              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-gray-900">
+                                <span className="text-sm font-medium leading-none text-white">
+                                  {user?.player?.name
+                                    ?.slice(0, 2)
+                                    .toUpperCase()}
+                                </span>
+                              </span>
+                            </Menu.Button>
+                          </div>
+                          <Transition
+                            as={Fragment}
+                            enter="transition ease-out duration-100"
+                            enterFrom="transform opacity-0 scale-95"
+                            enterTo="transform opacity-100 scale-100"
+                            leave="transition ease-in duration-75"
+                            leaveFrom="transform opacity-100 scale-100"
+                            leaveTo="transform opacity-0 scale-95"
+                          >
+                            <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                              <Menu.Item>
+                                {({ active }) => (
+                                  <Link
+                                    to="/profile"
+                                    className={classNames(
+                                      active ? "bg-gray-100" : "",
+                                      "block px-4 py-2 text-sm text-gray-700"
+                                    )}
+                                  >
+                                    View Profile
+                                  </Link>
+                                )}
+                              </Menu.Item>
+                              <Menu.Item>
+                                {({ active }) => (
+                                  <Form action="/logout" method="post">
+                                    <button
+                                      type="submit"
+                                      className={classNames(
+                                        active ? "bg-gray-100" : "",
+                                        "block w-full px-4 py-2 text-sm text-gray-700"
+                                      )}
+                                    >
+                                      Log Out
+                                    </button>
+                                  </Form>
+                                )}
+                              </Menu.Item>
+                            </Menu.Items>
+                          </Transition>
+                        </Menu>
+                      ) : null}
                     </div>
                   </div>
                 </div>
@@ -180,7 +205,7 @@ export default function Shell() {
           )}
         </Disclosure>
 
-        <div className="mx-auto w-full flex-grow lg:flex xl:px-8">
+        <div className="mx-auto w-full flex-grow px-8 pb-8 lg:flex">
           <Outlet />
         </div>
       </div>
