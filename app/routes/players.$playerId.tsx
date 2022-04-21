@@ -1,5 +1,5 @@
 import { Link, useLoaderData } from "@remix-run/react";
-import { json } from "@remix-run/node";
+import { json, redirect } from "@remix-run/node";
 import type { LoaderFunction } from "@remix-run/node";
 import { getRaids } from "~/models/raid.server";
 import {
@@ -11,24 +11,34 @@ import {
 import { useOptionalUser, useUser } from "~/utils";
 import { requireUserId } from "~/session.server";
 import { getBoxes, getPlayer } from "~/models/roster.server";
-import { getPlayerByUserId } from "~/models/user.server";
+import {
+  getPlayerByUserId,
+  getUserByPlayerId,
+  getUserByPlayerName,
+} from "~/models/user.server";
 
 type LoaderData = {
   boxes: Awaited<ReturnType<typeof getBoxes>>;
-  player: Awaited<ReturnType<typeof getPlayer>>;
+  user: Awaited<ReturnType<typeof getUserByPlayerId>>;
 };
 
 export const loader: LoaderFunction = async ({ params }) => {
   const playerId = params.playerId ?? 0;
-  const player = await getPlayer(BigInt(playerId));
+  const user = await getUserByPlayerId(BigInt(playerId));
+  if (!user) {
+    redirect("/");
+  }
   const boxes = await getBoxes(BigInt(playerId));
-  return json<LoaderData>({ player, boxes });
+  return json<LoaderData>({ user, boxes });
 };
 
 const badgeStyles = {
-  member: "bg-green-500 text-white",
-  officer: "bg-blue-500 text-white",
-  admin: "bg-orange-500 text-white",
+  member:
+    "inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-green-100 text-green-800",
+  officer:
+    "inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800",
+  admin:
+    "inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-purple-100 text-purple-800",
 };
 
 function classNames(...classes: string[]) {
@@ -36,28 +46,28 @@ function classNames(...classes: string[]) {
 }
 
 export default function RaidIndexPage() {
-  const user = useOptionalUser();
-  const { boxes, player } = useLoaderData<LoaderData>();
+  const sessionUser = useOptionalUser();
+  const { boxes, user } = useLoaderData<LoaderData>();
 
   //   const { raids } = useLoaderData<LoaderData>();
   const stats = [
     {
       name: "30 day attendance",
-      stat: `${player?.attendance_30}%`,
+      stat: `${user?.player?.attendance_30 ?? 0}%`,
     },
     {
       name: "60 day attendance",
-      stat: `${player?.attendance_60}%`,
+      stat: `${user?.player?.attendance_60 ?? 0}%`,
       classNames: "hidden sm:block",
     },
     {
       name: "90 day attendance",
-      stat: `${player?.attendance_90}%`,
+      stat: `${user?.player?.attendance_90 ?? 0}%`,
       classNames: "hidden sm:block",
     },
     {
       name: "Lifetime attendance",
-      stat: `${player?.attendance_life}%`,
+      stat: `${user?.player?.attendance_life ?? 0}%`,
     },
   ];
   return (
@@ -93,9 +103,14 @@ export default function RaidIndexPage() {
         </nav>
       </div>
       <div className="mt-4">
-        <h1 className="text-xl font-medium capitalize leading-6 text-gray-900">
-          {player?.name}
-        </h1>
+        <div className="flex items-center gap-2 border-b border-gray-200 py-4">
+          <h1 className="text-3xl font-medium capitalize leading-6 text-gray-900">
+            {user?.player?.name}
+          </h1>
+          <span className={badgeStyles?.[user?.role ?? "member"]}>
+            {user?.role}
+          </span>
+        </div>
         <dl className="mt-5 grid grid-cols-1 divide-y divide-gray-200 overflow-hidden rounded-lg bg-white shadow md:grid-cols-5 md:divide-y-0 md:divide-x">
           {stats.map((item) => (
             <div
@@ -139,14 +154,6 @@ export default function RaidIndexPage() {
                 Box Management
               </h3>
             </div>
-            <div className="ml-4 mt-2 flex-shrink-0">
-              <button
-                type="button"
-                className="relative inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-              >
-                Add box
-              </button>
-            </div>
           </div>
         </div>
         <dl className="grid grid-cols-6 gap-2 py-4">
@@ -162,6 +169,14 @@ export default function RaidIndexPage() {
               </div>
             </div>
           ))}
+          <div className="ml-4 mt-2 flex-shrink-0">
+            <button
+              type="button"
+              className="relative inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            >
+              Add box
+            </button>
+          </div>
         </dl>
       </div>
     </div>

@@ -42,6 +42,17 @@ export async function getUserByPlayerName(playerName: player["name"]) {
   });
 }
 
+export async function getUserByPlayerId(playerId: player["id"]) {
+  if (!playerId) {
+    return null;
+  }
+
+  return prisma.user.findFirst({
+    where: { player: { id: playerId } },
+    include: { player: true },
+  });
+}
+
 export async function createUser(
   email: user["email"],
   password: string,
