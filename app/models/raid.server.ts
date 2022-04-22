@@ -57,10 +57,12 @@ export async function getRaid({ id }: Pick<raid, "id">) {
     }
 
     if (mainName !== null) {
+      // @ts-ignore
       attendees[playerId].ticks?.[raid_hour]?.add(mainName);
     }
 
     if (player?.name) {
+      // @ts-ignore
       attendees[playerId].ticks?.[raid_hour]?.add(player.name);
     }
   });
@@ -108,7 +110,7 @@ export async function getRaids({
       r.name,
       r.created_at,
       COUNT(DISTINCT pr.raid_hour) AS total_ticks,
-      COUNT(DISTINCT pr.player_id) AS total_mains
+      COUNT(DISTINCT (IF(pr.player_id IS NOT NULL AND pa.player_id <> pr.player_id, pr.player_id, null))) AS total_mains
     FROM raid r
     LEFT JOIN player_raid pr ON pr.raid_id = r.id
     LEFT JOIN player_alt pa ON pa.alt_id = pr.player_id

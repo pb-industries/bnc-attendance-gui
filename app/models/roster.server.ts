@@ -1,5 +1,6 @@
 import { player } from "@prisma/client";
 import { prisma } from "~/db.server";
+import { requireUser } from "~/session.server";
 
 export type { raid } from "@prisma/client";
 
@@ -29,6 +30,29 @@ export async function getPlayer(playerId?: bigint) {
   return await prisma.player.findFirst({ where: { id: playerId } });
 }
 
+export async function deletePlayer(request: Request, playerId?: bigint) {
+  if (!playerId) {
+    return null;
+  }
+
+  const user = await requireUser(request);
+  if (!user) {
+    return null;
+  }
+
+  user.role = "guest";
+
+  if (
+    ["admin", "officer"].includes(user.role ?? "guest") ||
+    user.player_id === playerId ||
+    isBoxAssociatedWith(user.player_id, playerId)
+  ) {
+    return await prisma.player.delete({ where: { id: BigInt(playerId) } });
+  }
+
+  return null;
+}
+
 export async function getBoxes(playerId?: bigint) {
   if (!playerId) {
     return null;
@@ -54,4 +78,74 @@ export async function getBoxes(playerId?: bigint) {
   });
 
   return boxes;
+}
+
+export async function isBoxAssociatedWith(playerId: bigint, altId: bigint) {
+  const res = await prisma.player_alt.findFirst({
+    where: {
+      player_id: playerId,
+      alt_id: altId,
+    },
+  });
+
+  return !!res;
+}
+
+export async function createBox(
+  player: player,
+  mainId: bigint,
+  playerId?: bigint
+) {
+  let existingPlayer;
+  let boxId = null;
+  if (playerId) {
+    existingPlayer = await prisma.player.findFirst({
+      where: { id: BigInt(playerId) },
+    });
+  }
+  if (!existingPlayer) {
+    existingPlayer = await prisma.player.findFirst({
+      where: { name: player.name.trim().toLowerCase() },
+    });
+  }
+
+  if (!existingPlayer) {
+    const addedPlayer = await prisma.player.create({
+      data: {
+        name: player.name?.trim().toLowerCase(),
+        class: player.class?.trim().toLowerCase(),
+        level: player.level,
+      },
+    });
+    boxId = addedPlayer.id;
+  } else {
+    existingPlayer.name = player.name;
+    existingPlayer.level = player.level;
+    existingPlayer.class = player.class;
+    await prisma.player.update({
+      data: { class: player.class, level: player.level, name: player.name },
+      where: { id: existingPlayer.id },
+    });
+    boxId = existingPlayer.id;
+  }
+
+  try {
+    console.log(boxId, mainId);
+    if (boxId && mainId) {
+      await prisma.$queryRaw`
+        DELETE FROM player_alt
+        WHERE alt_id = ${boxId}
+      `;
+      await prisma.player_alt.create({
+        data: {
+          player_id: mainId,
+          alt_id: boxId,
+        },
+      });
+    }
+  } catch {
+    console.info("box already belongs to this user");
+  }
+
+  return existingPlayer;
 }

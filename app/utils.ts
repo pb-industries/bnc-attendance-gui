@@ -37,18 +37,15 @@ export function safeRedirect(
 export function useMatchesData(
   id: string
 ): Record<string, unknown> | undefined {
-  console.log(id);
   const matchingRoutes = useMatches();
   const route = useMemo(
     () => matchingRoutes.find((route) => route.id === id),
     [matchingRoutes, id]
   );
-  console.log(route?.data);
   return route?.data;
 }
 
 function isUser(user: any): user is user {
-  console.log(user);
   return (
     user && typeof user === "object" && typeof user.player.name === "string"
   );
@@ -56,7 +53,6 @@ function isUser(user: any): user is user {
 
 export function useOptionalUser(): user | undefined {
   const data = useMatchesData("root");
-  console.log(data);
   if (!data || !isUser(data.user)) {
     return undefined;
   }

@@ -20,7 +20,7 @@ export const loader: LoaderFunction = async ({ request }) => {
 export default function RaidIndexPage() {
   const { raids } = useLoaderData<LoaderData>();
   return (
-    <div className="w-full py-4">
+    <div className="w-full">
       <div>
         <nav className="hidden sm:flex" aria-label="Breadcrumb">
           <ol role="list" className="flex items-center space-x-4">

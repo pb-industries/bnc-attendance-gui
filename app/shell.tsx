@@ -40,7 +40,7 @@ export default function Shell() {
       /> */}
       <div className="relative flex min-h-screen flex-col">
         {/* Navbar */}
-        <Disclosure as="nav" className="flex-shrink-0 bg-indigo-600">
+        <Disclosure as="nav" className="flex-shrink-0 bg-gray-900">
           {({ open }) => (
             <>
               <div className="mx-auto max-w-7xl px-2 sm:px-4 lg:px-8">
@@ -48,11 +48,13 @@ export default function Shell() {
                   {/* Logo section */}
                   <div className="flex items-center px-2 lg:px-0 xl:w-64">
                     <div className="flex-shrink-0">
-                      <img
-                        className="h-8 w-auto"
-                        src="https://tailwindui.com/img/logos/workflow-mark-indigo-300.svg"
-                        alt="Workflow"
-                      />
+                      <Link to="/">
+                        <img
+                          className="h-8 w-auto"
+                          src="/images/bnc.png"
+                          alt="Workflow"
+                        />
+                      </Link>
                     </div>
                   </div>
 
@@ -109,7 +111,7 @@ export default function Shell() {
                           <div>
                             <Menu.Button className="flex rounded-full bg-indigo-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-700">
                               <span className="sr-only">Open user menu</span>
-                              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-gray-900">
+                              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-blue-600">
                                 <span className="text-sm font-medium leading-none text-white">
                                   {user?.player?.name
                                     ?.slice(0, 2)
@@ -205,7 +207,7 @@ export default function Shell() {
           )}
         </Disclosure>
 
-        <div className="mx-auto w-full flex-grow px-8 pb-8 lg:flex">
+        <div className="mx-auto w-full flex-grow px-8 py-4 pb-8 lg:flex">
           <Outlet />
         </div>
       </div>

@@ -272,7 +272,7 @@ export default function Join() {
               htmlFor="player.class"
               className="block text-sm font-medium text-gray-700"
             >
-              Level:
+              Class:
             </label>
             <div className="mt-1">
               <select
@@ -280,12 +280,11 @@ export default function Join() {
                 required
                 autoFocus={true}
                 name="player.class"
-                defaultValue="65"
                 autoComplete="player.class"
                 aria-invalid={
                   actionData?.errors?.player?.class ? true : undefined
                 }
-                aria-describedby="player.classl-error"
+                aria-describedby="player.class-error"
                 className="w-full rounded border border-gray-500 px-2 py-1 text-lg capitalize"
               >
                 {getClasses().map((className) => (
@@ -294,6 +293,7 @@ export default function Join() {
                   </option>
                 ))}
               </select>
+
               {actionData?.errors?.player?.class && (
                 <div className="pt-1 text-red-700" id="player.class-error">
                   {actionData.errors?.player?.class}

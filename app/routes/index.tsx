@@ -126,7 +126,7 @@ export default function IndexRoute() {
   };
 
   return (
-    <main className="relative flex min-h-screen flex-grow flex-col items-center justify-center bg-white py-4">
+    <main className="relative flex min-h-screen flex-grow flex-col items-center justify-center bg-white">
       <div style={{ alignSelf: "flex-start" }}>
         <nav className="hidden sm:flex" aria-label="Breadcrumb">
           <ol role="list" className="flex items-center space-x-4">
