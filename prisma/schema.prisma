@@ -37,13 +37,14 @@ model player {
   raffle                                        raffle[]
   request_tick_playerTorequest_tick_approved_by request_tick[] @relation("playerTorequest_tick_approved_by")
   request_tick_playerTorequest_tick_player_id   request_tick[] @relation("playerTorequest_tick_player_id")
+  request_tick_playerTorequest_tick_rejected_by request_tick[] @relation("playerTorequest_tick_rejected_by")
   user                                          user[]
 }
 
 model player_alt {
   player_id                           BigInt
   alt_id                              BigInt
-  player_playerToplayer_alt_alt_id    player @relation("playerToplayer_alt_alt_id", fields: [alt_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "player_alt_alt_id_foreign")
+  player_playerToplayer_alt_alt_id    player @relation("playerToplayer_alt_alt_id", fields: [alt_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "player_alt_alt_id_foreign")
   player_playerToplayer_alt_player_id player @relation("playerToplayer_alt_player_id", fields: [player_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "player_alt_player_id_foreign")
 
   @@id([player_id, alt_id])
@@ -115,9 +116,12 @@ model request_tick {
   approved_at                             DateTime? @db.Timestamptz(6)
   created_at                              DateTime? @default(now()) @db.Timestamptz(6)
   updated_at                              DateTime? @default(now()) @db.Timestamptz(6)
+  rejected_by                             BigInt?
+  rejected_at                             DateTime? @db.Timestamptz(6)
   player_playerTorequest_tick_approved_by player?   @relation("playerTorequest_tick_approved_by", fields: [approved_by], references: [id], onDelete: Cascade, map: "request_tick_approved_by_foreign")
   player_playerTorequest_tick_player_id   player    @relation("playerTorequest_tick_player_id", fields: [player_id], references: [id], onDelete: Cascade, map: "request_tick_player_id_foreign")
   raid                                    raid      @relation(fields: [raid_id], references: [id], onDelete: Cascade, map: "request_tick_raid_id_foreign")
+  player_playerTorequest_tick_rejected_by player?   @relation("playerTorequest_tick_rejected_by", fields: [rejected_by], references: [id], onDelete: Cascade, map: "request_tick_rejected_by_foreign")
 
   @@id([player_id, raid_id, raid_hour])
 }

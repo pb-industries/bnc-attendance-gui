@@ -2,7 +2,7 @@ import { Link, useLoaderData } from "@remix-run/react";
 import { json, redirect } from "@remix-run/node";
 import type { LoaderFunction, ActionFunction } from "@remix-run/node";
 import { ChevronRightIcon, PencilIcon, XIcon } from "@heroicons/react/outline";
-import { useOptionalUser, validatePlayer } from "~/utils";
+import { getBadgeStyle, useOptionalUser, validatePlayer } from "~/utils";
 import {
   createBox,
   deletePlayer,
@@ -118,17 +118,6 @@ export const loader: LoaderFunction = async ({ params }) => {
   return json<LoaderData>({ user, player, boxes });
 };
 
-const badgeStyles = {
-  guest:
-    "inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-gray-100 text-gray-800",
-  member:
-    "inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-green-100 text-green-800",
-  officer:
-    "inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800",
-  admin:
-    "inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-purple-100 text-purple-800",
-};
-
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
 }
@@ -215,7 +204,7 @@ export default function RaidIndexPage() {
           <h1 className="text-3xl font-medium capitalize leading-6 text-gray-900">
             {player?.name}
           </h1>
-          <span className={badgeStyles?.[user?.role ?? "guest"]}>
+          <span className={getBadgeStyle(user?.role ?? "guest")}>
             {user?.role ?? "guest"}
           </span>
         </div>

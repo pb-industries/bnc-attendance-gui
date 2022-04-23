@@ -129,3 +129,25 @@ export function deleteRaid({ id }: Pick<raid, "id">) {
     where: { id },
   });
 }
+
+export async function createRaidTickRequest(
+  playerId: bigint,
+  raidId: bigint,
+  raidHours: bigint[]
+) {
+  if (!playerId || !raidId || raidHours.length === 0) {
+    return false;
+  }
+
+  try {
+    return await prisma.request_tick.createMany({
+      data: raidHours.map((raidHour) => ({
+        player_id: BigInt(playerId),
+        raid_id: BigInt(raidId),
+        raid_hour: BigInt(raidHour),
+      })),
+    });
+  } catch (e) {
+    return null;
+  }
+}

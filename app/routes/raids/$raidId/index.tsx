@@ -1,15 +1,20 @@
 import { Link, useLoaderData } from "@remix-run/react";
 import { json } from "@remix-run/node";
-import type { LoaderFunction } from "@remix-run/node";
-import { getRaid } from "~/models/raid.server";
+import type { LoaderFunction, ActionFunction } from "@remix-run/node";
+import { createRaidTickRequest, getRaid } from "~/models/raid.server";
 import { ChevronRightIcon } from "@heroicons/react/outline";
 import { useCallback, useEffect, useState } from "react";
 import HighchartsReact from "highcharts-react-official";
 import Highcharts from "highcharts";
 import debounce from "lodash.debounce";
+import RequestTicksModal from "~/components/raids/requestTicksModal";
+import { getMains } from "~/models/roster.server";
+import { useOptionalUser } from "~/utils";
+import { requireUser } from "~/session.server";
 
 type LoaderData = {
   raid: Awaited<ReturnType<typeof getRaid>>;
+  mains: Awaited<ReturnType<typeof getMains>> | player[];
 };
 
 type HighchartsData = {
@@ -19,17 +24,69 @@ type HighchartsData = {
   series: { name: string; data: number[] }[];
 };
 
+export const action: ActionFunction = async ({ request }) => {
+  const user = await requireUser(request);
+  const formData = await request.formData();
+
+  const playerId = formData.get("player.id") ?? null;
+  const raidId = formData.get("raid.id") ?? null;
+  if (typeof playerId !== "string" || typeof raidId !== "string") {
+    return json({ error: "No player selected" });
+  }
+
+  if (
+    !["officer", "admin"].includes(user?.role ?? "guest") &&
+    user?.player_id !== BigInt(playerId)
+  ) {
+    return json({
+      status: 403,
+      alert: {
+        type: "error",
+        message: "Only admins can request on behalf of other",
+      },
+    });
+  }
+
+  // @ts-ignore
+  const ticks = formData.getAll("tick").map((tick) => BigInt(tick));
+  if (ticks.length === 0) {
+    return json({
+      status: 403,
+      alert: { type: "error", message: "No ticks selected" },
+    });
+  }
+
+  await createRaidTickRequest(BigInt(playerId), BigInt(raidId), ticks);
+
+  return json({
+    status: 200,
+    alert: {
+      type: "succes",
+      message: "Successfully requested ticks, please await officer approval",
+    },
+  });
+};
+
 export const loader: LoaderFunction = async ({ request, params }) => {
+  const user = await requireUser(request);
   const raid = await getRaid({ id: (params.raidId ?? 0) as unknown as number });
-  return json<LoaderData>({ raid });
+  const mains = ["officer", "admin"].includes(
+    user?.role?.toLowerCase() ?? "guest"
+  )
+    ? await getMains()
+    : [user?.player];
+
+  return json<LoaderData>({ raid, mains });
 };
 
 export default function raidIdPage() {
-  const { raid } = useLoaderData<LoaderData>();
+  const user = useOptionalUser();
+  const { raid, mains } = useLoaderData<LoaderData>();
   const [mounted, setMounted] = useState(false);
   const [containerWidth, setContainerWidth] = useState(
     typeof window === "undefined" ? 800 : window.innerWidth - 100
   );
+  const [isRequestTicksModalOpen, setIsRequestTicksModalOpen] = useState(false);
   const [options, setOptions] = useState<HighchartsData>({
     title: { text: "Attendance and box distribution" },
     xAxis: { categories: [], crosshair: true },
@@ -162,14 +219,17 @@ export default function raidIdPage() {
             </div>
           </div>
         </div>
-        <div className="mt-4 flex flex-shrink-0 md:mt-0 md:ml-4">
-          <button
-            type="button"
-            className="ml-3 inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-          >
-            Request missing ticks
-          </button>
-        </div>
+        {user ? (
+          <div className="mt-4 flex flex-shrink-0 md:mt-0 md:ml-4">
+            <button
+              type="button"
+              className="ml-3 inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              onClick={() => setIsRequestTicksModalOpen(true)}
+            >
+              Request missing ticks
+            </button>
+          </div>
+        ) : null}
       </div>
 
       <div
@@ -220,6 +280,15 @@ export default function raidIdPage() {
           }}
         />
       </div>
+
+      <RequestTicksModal
+        open={isRequestTicksModalOpen}
+        setOpen={setIsRequestTicksModalOpen}
+        players={mains}
+        selectedPlayerId={user?.player_id}
+        totalTicks={raid.total_ticks}
+        raidId={raid.id!}
+      />
     </div>
   );
 }

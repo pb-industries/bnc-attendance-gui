@@ -22,15 +22,16 @@ interface ActionData {
 
 const AddBoxModal: FC<ManageBoxModalProps> = ({ player, open, setOpen }) => {
   const actionData = useActionData<ActionData>();
-  const cancelButtonRef = useRef();
-  const playerNameRef = useRef();
-  const playerLevelRef = useRef();
+  const cancelButtonRef = useRef<HTMLButtonElement>();
+  const playerNameRef = useRef<HTMLInputElement>();
+  const playerLevelRef = useRef<HTMLInputElement>();
 
   return (
     <Transition.Root show={open} as={Fragment}>
       <Dialog
         as="div"
         className="fixed inset-0 z-10 overflow-y-auto"
+        // @ts-ignore
         initialFocus={cancelButtonRef}
         onClose={setOpen}
       >
@@ -156,7 +157,7 @@ const AddBoxModal: FC<ManageBoxModalProps> = ({ player, open, setOpen }) => {
                         aria-invalid={
                           actionData?.errors?.player?.class ? true : undefined
                         }
-                        defaultValue={player?.class}
+                        defaultValue={player?.class ?? ""}
                         aria-describedby="player.class-error"
                         className="w-full rounded border border-gray-500 px-2 py-1 text-lg capitalize"
                       >
@@ -182,7 +183,7 @@ const AddBoxModal: FC<ManageBoxModalProps> = ({ player, open, setOpen }) => {
                     className="hidden"
                     type="hideen"
                     name="player.id"
-                    value={player?.id ?? 0}
+                    value={`${player?.id ?? 0}`}
                   />
 
                   <button

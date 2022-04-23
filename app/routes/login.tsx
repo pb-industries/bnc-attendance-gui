@@ -61,6 +61,17 @@ export const action: ActionFunction = async ({ request }) => {
     );
   }
 
+  if (!user.approved && !["admin", "officer"].includes(user?.role ?? "guest")) {
+    return json<ActionData>(
+      {
+        errors: {
+          email: "Account is not approved, please contact an officer or admin",
+        },
+      },
+      { status: 400 }
+    );
+  }
+
   return createUserSession({
     request,
     userId: `${user.id}`,

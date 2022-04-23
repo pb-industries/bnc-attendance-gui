@@ -117,6 +117,22 @@ export function getClasses() {
   ];
 }
 
+export function getBadgeStyle(role: string) {
+  const badgeStyles = {
+    guest:
+      "inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-gray-100 text-gray-800",
+    member:
+      "inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-green-100 text-green-800",
+    officer:
+      "inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800",
+    admin:
+      "inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-purple-100 text-purple-800",
+  };
+
+  const style = badgeStyles?.[role.toLowerCase().trim()];
+  return style ?? badgeStyles.guest;
+}
+
 export function verifyClass(className: string) {
   return getClasses().includes(className.trim().toLowerCase());
 }
