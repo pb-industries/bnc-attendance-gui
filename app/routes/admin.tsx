@@ -215,253 +215,259 @@ export default function RaidIndexPage() {
       <div className="grid grid-cols-12 gap-4 py-4">
         <div className="col-span-12 shadow lg:col-span-6 xl:col-span-4">
           <h2 className="p-4 text-lg font-medium">Approve accounts</h2>
-          {pendingAccounts?.length === 0 ? (
-            <div className="flex flex-col items-center rounded border-2 border-dashed border-gray-200 py-12 px-4 text-center">
-              <UsersIcon
-                className="mb-2 h-8 w-8 text-gray-400"
-                aria-hidden="true"
-              />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">
-                No pending accounts
-              </h3>
-              <p className="mt-1 text-sm text-gray-500">
-                It looks like everyone is registered and set up, nice work!
-              </p>
-            </div>
-          ) : (
-            <table className="min-w-full divide-y divide-gray-300">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th
-                    scope="col"
-                    className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6"
-                  >
-                    Name
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                  >
-                    Role
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                  >
-                    <span className="sr-only">Action</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
-                {pendingAccounts.map((account) => (
-                  // @ts-ignore
-                  <tr key={account.player.id}>
-                    <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
-                      <div className="flex items-center">
-                        <div className="h-10 w-10 flex-shrink-0">
-                          <img
-                            className="h-8 w-8 rounded-full"
-                            src={`/images/${
-                              account.player.class ?? "warrior"
-                            }.png`}
-                            alt=""
-                          />
-                        </div>
-                        <div className="ml-4">
-                          <div className="font-medium capitalize text-gray-900">
-                            {account.player.name}
-                          </div>
-                          <div className="capitalize text-gray-500">
-                            {account.player.class}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                      <span className={getBadgeStyle(account.role ?? "guest")}>
-                        {account.role}
-                      </span>
-                    </td>
-                    <td className="txt-sm whitespace-nowrap px-3 py-4 text-gray-500">
-                      <div className="flex items-center justify-center gap-2 ">
-                        <Form method="post">
-                          <input
-                            type="hidden"
-                            name="account.approve"
-                            value={`${account.id}`}
-                          />
-                          <button
-                            className="rounded-full bg-green-600 p-1 hover:bg-green-500"
-                            type="submit"
-                          >
-                            <CheckIcon
-                              className="h-5 w-5 text-white"
-                              aria-hidden="true"
-                            />
-                          </button>
-                        </Form>
-                        <Form method="post">
-                          <input
-                            type="hidden"
-                            name="account.reject"
-                            value={`${account.id}`}
-                          />
-                          <button
-                            className="rounded-full bg-red-600 p-1 hover:bg-red-500"
-                            type="submit"
-                          >
-                            <XIcon
-                              className="h-5 w-5 text-white"
-                              aria-hidden="true"
-                            />
-                          </button>
-                        </Form>
-                      </div>
-                    </td>
+          <div className="px-4">
+            {pendingAccounts?.length === 0 ? (
+              <div className="flex flex-col items-center rounded border-2 border-dashed border-gray-200 py-12 px-4 text-center">
+                <UsersIcon
+                  className="mb-2 h-8 w-8 text-gray-400"
+                  aria-hidden="true"
+                />
+                <h3 className="mt-2 text-sm font-medium text-gray-900">
+                  No pending accounts
+                </h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  It looks like everyone is registered and set up, nice work!
+                </p>
+              </div>
+            ) : (
+              <table className="min-w-full divide-y divide-gray-300">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th
+                      scope="col"
+                      className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6"
+                    >
+                      Name
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                    >
+                      Role
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                    >
+                      <span className="sr-only">Action</span>
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+                </thead>
+                <tbody className="divide-y divide-gray-200 bg-white">
+                  {pendingAccounts.map((account) => (
+                    // @ts-ignore
+                    <tr key={account.player.id}>
+                      <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
+                        <div className="flex items-center">
+                          <div className="h-10 w-10 flex-shrink-0">
+                            <img
+                              className="h-8 w-8 rounded-full"
+                              src={`/images/${
+                                account.player.class ?? "warrior"
+                              }.png`}
+                              alt=""
+                            />
+                          </div>
+                          <div className="ml-4">
+                            <div className="font-medium capitalize text-gray-900">
+                              {account.player.name}
+                            </div>
+                            <div className="capitalize text-gray-500">
+                              {account.player.class}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                        <span
+                          className={getBadgeStyle(account.role ?? "guest")}
+                        >
+                          {account.role}
+                        </span>
+                      </td>
+                      <td className="txt-sm whitespace-nowrap px-3 py-4 text-gray-500">
+                        <div className="flex items-center justify-center gap-2 ">
+                          <Form method="post">
+                            <input
+                              type="hidden"
+                              name="account.approve"
+                              value={`${account.id}`}
+                            />
+                            <button
+                              className="rounded-full bg-green-600 p-1 hover:bg-green-500"
+                              type="submit"
+                            >
+                              <CheckIcon
+                                className="h-5 w-5 text-white"
+                                aria-hidden="true"
+                              />
+                            </button>
+                          </Form>
+                          <Form method="post">
+                            <input
+                              type="hidden"
+                              name="account.reject"
+                              value={`${account.id}`}
+                            />
+                            <button
+                              className="rounded-full bg-red-600 p-1 hover:bg-red-500"
+                              type="submit"
+                            >
+                              <XIcon
+                                className="h-5 w-5 text-white"
+                                aria-hidden="true"
+                              />
+                            </button>
+                          </Form>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
         <div className="col-span-12 shadow lg:col-span-6 xl:col-span-4">
           <h2 className="p-4 text-lg font-medium">Approve ticks</h2>
-          {tickApprovals?.length === 0 ? (
-            <div className="flex flex-col items-center rounded border-2 border-dashed border-gray-200 py-12 px-4 text-center">
-              <ClockIcon
-                className="mb-2 h-8 w-8 text-gray-400"
-                aria-hidden="true"
-              />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">
-                No pending raid ticks
-              </h3>
-              <p className="mt-1 text-sm text-gray-500">
-                There are no pending raid ticks to approve, noice!
-              </p>
-            </div>
-          ) : (
-            <table className="min-w-full divide-y divide-gray-300">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th
-                    scope="col"
-                    className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6"
-                  >
-                    Name
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                  >
-                    Raid
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                  >
-                    Tick #
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                  >
-                    <span className="sr-only">Action</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
-                {tickApprovals.map((approval, approvalIdx) => (
-                  // @ts-ignore
-                  <tr key={approvalIdx}>
-                    <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
-                      <div className="flex items-center">
-                        <div className="h-10 w-10 flex-shrink-0">
-                          <img
-                            className="h-8 w-8 rounded-full"
-                            src={`/images/${
-                              approval.player_playerTorequest_tick_player_id
-                                .class ?? "warrior"
-                            }.png`}
-                            alt=""
-                          />
-                        </div>
-                        <div className="ml-4">
-                          <div className="font-medium capitalize text-gray-900">
-                            {
-                              approval.player_playerTorequest_tick_player_id
-                                .name
-                            }
-                          </div>
-                          <div className="capitalize text-gray-500">
-                            {
-                              approval.player_playerTorequest_tick_player_id
-                                .class
-                            }
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                      <Link to={`/raids/${approval.raid_id}`}>
-                        {approval.raid.name}
-                      </Link>
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                      {approval.raid_hour}
-                    </td>
-                    <td className="txt-sm whitespace-nowrap px-3 py-4 text-gray-500">
-                      <div className="flex items-center justify-center gap-2 ">
-                        <Form method="post">
-                          <input
-                            type="hidden"
-                            name="tick.approve"
-                            value={[
-                              approval.player_id,
-                              approval.raid_id,
-                              approval.raid_hour,
-                            ].join(":")}
-                          />
-                          <button
-                            className="rounded-full bg-green-600 p-1 hover:bg-green-500"
-                            type="submit"
-                          >
-                            <CheckIcon
-                              className="h-5 w-5 text-white"
-                              aria-hidden="true"
-                            />
-                          </button>
-                        </Form>
-                        <Form method="post">
-                          <input
-                            type="hidden"
-                            name="tick.reject"
-                            value={[
-                              approval.player_id,
-                              approval.raid_id,
-                              approval.raid_hour,
-                            ].join(":")}
-                          />
-                          <button
-                            className="rounded-full bg-red-600 p-1 hover:bg-red-500"
-                            type="submit"
-                          >
-                            <XIcon
-                              className="h-5 w-5 text-white"
-                              aria-hidden="true"
-                            />
-                          </button>
-                        </Form>
-                      </div>
-                    </td>
+          <div className="px-4">
+            {tickApprovals?.length === 0 ? (
+              <div className="flex flex-col items-center rounded border-2 border-dashed border-gray-200 py-12 px-4 text-center">
+                <ClockIcon
+                  className="mb-2 h-8 w-8 text-gray-400"
+                  aria-hidden="true"
+                />
+                <h3 className="mt-2 text-sm font-medium text-gray-900">
+                  No pending raid ticks
+                </h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  There are no pending raid ticks to approve, noice!
+                </p>
+              </div>
+            ) : (
+              <table className="min-w-full divide-y divide-gray-300">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th
+                      scope="col"
+                      className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6"
+                    >
+                      Name
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                    >
+                      Raid
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                    >
+                      Tick #
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                    >
+                      <span className="sr-only">Action</span>
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+                </thead>
+                <tbody className="divide-y divide-gray-200 bg-white">
+                  {tickApprovals.map((approval, approvalIdx) => (
+                    // @ts-ignore
+                    <tr key={approvalIdx}>
+                      <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
+                        <div className="flex items-center">
+                          <div className="h-10 w-10 flex-shrink-0">
+                            <img
+                              className="h-8 w-8 rounded-full"
+                              src={`/images/${
+                                approval.player_playerTorequest_tick_player_id
+                                  .class ?? "warrior"
+                              }.png`}
+                              alt=""
+                            />
+                          </div>
+                          <div className="ml-4">
+                            <div className="font-medium capitalize text-gray-900">
+                              {
+                                approval.player_playerTorequest_tick_player_id
+                                  .name
+                              }
+                            </div>
+                            <div className="capitalize text-gray-500">
+                              {
+                                approval.player_playerTorequest_tick_player_id
+                                  .class
+                              }
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                        <Link to={`/raids/${approval.raid_id}`}>
+                          {approval.raid.name}
+                        </Link>
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                        {approval.raid_hour}
+                      </td>
+                      <td className="txt-sm whitespace-nowrap px-3 py-4 text-gray-500">
+                        <div className="flex items-center justify-center gap-2 ">
+                          <Form method="post">
+                            <input
+                              type="hidden"
+                              name="tick.approve"
+                              value={[
+                                approval.player_id,
+                                approval.raid_id,
+                                approval.raid_hour,
+                              ].join(":")}
+                            />
+                            <button
+                              className="rounded-full bg-green-600 p-1 hover:bg-green-500"
+                              type="submit"
+                            >
+                              <CheckIcon
+                                className="h-5 w-5 text-white"
+                                aria-hidden="true"
+                              />
+                            </button>
+                          </Form>
+                          <Form method="post">
+                            <input
+                              type="hidden"
+                              name="tick.reject"
+                              value={[
+                                approval.player_id,
+                                approval.raid_id,
+                                approval.raid_hour,
+                              ].join(":")}
+                            />
+                            <button
+                              className="rounded-full bg-red-600 p-1 hover:bg-red-500"
+                              type="submit"
+                            >
+                              <XIcon
+                                className="h-5 w-5 text-white"
+                                aria-hidden="true"
+                              />
+                            </button>
+                          </Form>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
         <div className="col-span-12 rounded shadow xl:col-span-4">
           <h2 className="p-4 text-lg font-medium">Tick approval activity</h2>
-          <ul role="list" className="divide-y divide-gray-200 p-2 p-8">
+          <ul role="list" className="divide-y divide-gray-200 p-2 px-6">
             {recentApprovals.length === 0 ? (
               <div className="flex flex-col items-center rounded border-2 border-dashed border-gray-200 py-12 px-4 text-center">
                 <TableIcon

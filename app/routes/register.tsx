@@ -51,7 +51,7 @@ export const action: ActionFunction = async ({ request }) => {
 
   if (!validateEmailOrUsername(email) && !validateEmailOrUsername(playerName)) {
     return json<ActionData>(
-      { errors: { email: "Email or username is invalid" } },
+      { errors: { player: { name: "Email or username is invalid" } } },
       { status: 400 }
     );
   }
@@ -97,7 +97,11 @@ export const action: ActionFunction = async ({ request }) => {
   const existingPlayer = await getUserByPlayerName(playerName);
   if (existingPlayer) {
     return json<ActionData>(
-      { errors: { email: "A user already exists with this player name" } },
+      {
+        errors: {
+          player: { name: "A user already exists with this player name" },
+        },
+      },
       { status: 400 }
     );
   }
@@ -156,7 +160,7 @@ export default function Join() {
               htmlFor="player.name"
               className="block text-sm font-medium text-gray-700"
             >
-              Main name:
+              *Main name:
             </label>
             <div className="mt-1">
               <input
@@ -181,12 +185,12 @@ export default function Join() {
             </div>
           </div>
 
-          <div>
+          <div className="hidden">
             <label
               htmlFor="email"
               className="block text-sm font-medium text-gray-700"
             >
-              Email address
+              Email address:
             </label>
             <div className="mt-1">
               <input
@@ -213,7 +217,7 @@ export default function Join() {
               htmlFor="password"
               className="block text-sm font-medium text-gray-700"
             >
-              Password
+              *Password:
             </label>
             <div className="mt-1">
               <input
@@ -239,7 +243,7 @@ export default function Join() {
               htmlFor="player.level"
               className="block text-sm font-medium text-gray-700"
             >
-              Level:
+              *Level:
             </label>
             <div className="mt-1">
               <input
@@ -272,7 +276,7 @@ export default function Join() {
               htmlFor="player.class"
               className="block text-sm font-medium text-gray-700"
             >
-              Class:
+              *Class:
             </label>
             <div className="mt-1">
               <select

@@ -270,12 +270,19 @@ export default function raidIdPage() {
               shadow: false,
             },
             tooltip: {
-              headerFormat: "<b>{point.x}</b><br/>",
-              pointFormat:
-                "{series.name}: {point.y}<br/>Total: {point.stackTotal}",
+              headerFormat: "<b>Boxes at tick</b><br/>",
+              pointFormat: `<span class="capitalize">{series.name}</span>: {point.y}`,
             },
             plotOptions: {
-              column: { stacking: "normal", dataLabels: { enabled: true } },
+              column: {
+                stacking: "normal",
+                dataLabels: {
+                  enabled: true,
+                  formatter: function () {
+                    return `<span class="capitalize">${this.series.name}</span>`;
+                  },
+                },
+              },
             },
           }}
         />

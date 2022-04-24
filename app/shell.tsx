@@ -143,6 +143,23 @@ export default function Shell() {
                                   </Link>
                                 )}
                               </Menu.Item>
+                              {["admin", "officer"].includes(
+                                user?.role ?? "guest"
+                              ) ? (
+                                <Menu.Item>
+                                  {({ active }) => (
+                                    <Link
+                                      to="/admin"
+                                      className={classNames(
+                                        active ? "bg-gray-100" : "",
+                                        "block px-4 py-2 text-sm text-gray-700"
+                                      )}
+                                    >
+                                      Admin Console
+                                    </Link>
+                                  )}
+                                </Menu.Item>
+                              ) : null}
                               <Menu.Item>
                                 {({ active }) => (
                                   <Form action="/logout" method="post">
@@ -150,7 +167,7 @@ export default function Shell() {
                                       type="submit"
                                       className={classNames(
                                         active ? "bg-gray-100" : "",
-                                        "block w-full px-4 py-2 text-sm text-gray-700"
+                                        "block w-full px-4 py-2 text-left text-sm text-gray-700"
                                       )}
                                     >
                                       Log Out
@@ -184,24 +201,34 @@ export default function Shell() {
                     Roster
                   </Disclosure.Button>
                 </div>
-                {/* <div className="border-t border-indigo-800 pt-4 pb-3">
+                <div className="border-t border-indigo-800 pt-4 pb-3">
                   <div className="px-2">
                     <Disclosure.Button
                       as="a"
-                      href="#"
+                      href="/profile"
                       className="block rounded-md px-3 py-2 text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-indigo-100"
                     >
                       Your Profile
                     </Disclosure.Button>
-                    <Disclosure.Button
-                      as="a"
-                      href="#"
-                      className="mt-1 block rounded-md px-3 py-2 text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-indigo-100"
-                    >
-                      Logout
-                    </Disclosure.Button>
+                    {["admin", "officer"].includes(user?.role ?? "guest") ? (
+                      <Disclosure.Button
+                        as="a"
+                        href="/admin"
+                        className="block rounded-md px-3 py-2 text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-indigo-100"
+                      >
+                        Admin Console
+                      </Disclosure.Button>
+                    ) : null}
+                    <Form action="/logout" method="post">
+                      <button
+                        type="submit"
+                        className="mt-1 block w-full rounded-md px-3 py-2 text-left text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-indigo-100"
+                      >
+                        Log Out
+                      </button>
+                    </Form>
                   </div>
-                </div> */}
+                </div>
               </Disclosure.Panel>
             </>
           )}
