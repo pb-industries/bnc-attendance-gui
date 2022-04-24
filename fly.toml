@@ -1,4 +1,4 @@
-app = "bnc-attendance-gui-3514"
+app = "bnc-app"
 kill_signal = "SIGINT"
 kill_timeout = 5
 processes = [ ]
@@ -10,7 +10,7 @@ cmd = "start.sh"
 entrypoint = "sh"
 
 [[services]]
-internal_port = 8_080
+internal_port = 3000
 processes = [ "app" ]
 protocol = "tcp"
 script_checks = [ ]
