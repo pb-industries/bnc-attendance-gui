@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import HighchartsReact from "highcharts-react-official";
 import Highcharts from "highcharts";
 import RequestTicksModal from "~/components/raids/requestTicksModal";
+import GenerateLottoRangeModal from "~/components/raids/generateLottoRangeModal";
 import { getMains } from "~/models/roster.server";
 import { useOptionalUser } from "~/utils";
 import { requireUser } from "~/session.server";
@@ -82,6 +83,8 @@ export default function raidIdPage() {
   const user = useOptionalUser();
   const { raid, mains } = useLoaderData<LoaderData>();
   const [isRequestTicksModalOpen, setIsRequestTicksModalOpen] = useState(false);
+  const [isGenerateLottoRangeModalOpen, setIsGenerateLottoRangeModalOpen] =
+    useState(false);
   const [options, setOptions] = useState<HighchartsData>({
     title: { text: "Attendance and box distribution" },
     xAxis: { categories: [], crosshair: true },
@@ -203,7 +206,7 @@ export default function raidIdPage() {
               <button
                 type="button"
                 className="ml-3 inline-flex items-center rounded-md border border-transparent bg-orange-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                onClick={() => setIsRequestTicksModalOpen(true)}
+                onClick={() => setIsGenerateLottoRangeModalOpen(true)}
               >
                 Generate Lotto Range
               </button>
@@ -279,6 +282,12 @@ export default function raidIdPage() {
         selectedPlayerId={user?.player_id}
         totalTicks={raid.total_ticks}
         raidId={raid.id!}
+      />
+
+      <GenerateLottoRangeModal
+        open={isGenerateLottoRangeModalOpen}
+        setOpen={setIsRequestTicksModalOpen}
+        players={mains}
       />
     </div>
   );
