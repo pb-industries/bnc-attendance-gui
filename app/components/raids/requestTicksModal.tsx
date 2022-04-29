@@ -28,6 +28,7 @@ const RequestTicksModal: FC<HandleDeleteModalProps> = ({
     for (let i = 0; i < totalTicks; i++) {
       checkBoxes.push(
         <input
+          key={i}
           className="rounded-full p-4"
           type="checkbox"
           name={`tick`}
