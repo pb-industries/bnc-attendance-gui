@@ -5,3 +5,11 @@ img.eq-link-icon {
   vertical-align: bottom;
   width: 24px;
 }
+
+.highcharts-container {
+  width: 100% !important;
+}
+
+.highcharts-root {
+  width: 100% !important;
+}

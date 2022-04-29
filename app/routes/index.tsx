@@ -4,9 +4,7 @@ import { Link, useLoaderData } from "remix";
 import { getMains } from "~/models/roster.server";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import debounce from "lodash.debounce";
-import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/outline";
+import { useEffect, useMemo, useState } from "react";
 
 type LoaderData = {
   mains: Awaited<ReturnType<typeof getMains>>;
@@ -25,10 +23,6 @@ export const loader: LoaderFunction = async () => {
 
 export default function IndexRoute() {
   const { mains } = useLoaderData<LoaderData>();
-  const [mounted, setMounted] = useState(false);
-  const [containerWidth, setContainerWidth] = useState(
-    typeof window === "undefined" ? 800 : window.innerWidth - 100
-  );
   const [sortConfig, setSortConfig] = useState<{
     key: string;
     direction: "ascending" | "descending";
@@ -40,30 +34,6 @@ export default function IndexRoute() {
     xAxis: { categories: [], crosshair: true },
     series: [],
   });
-
-  const doResize = () => {
-    let container = document.querySelector("#chart-container");
-    var width = container?.getBoundingClientRect().width;
-    if (!width) {
-      width = window.innerWidth;
-    }
-
-    setContainerWidth(width - 100);
-  };
-
-  const debouncedResize = useCallback(
-    debounce(() => {
-      doResize();
-    }, 100),
-    []
-  );
-
-  useEffect(() => {
-    window.addEventListener("resize", debouncedResize);
-    doResize();
-    setMounted(true);
-    return () => window.removeEventListener("resize", debouncedResize);
-  }, [mounted]);
 
   const requestSort = (key: string) => {
     let direction: "ascending" | "descending" = "ascending";
@@ -143,18 +113,13 @@ export default function IndexRoute() {
           </ol>
         </nav>
       </div>
-      <div
-        id="chart-container"
-        className="w-full p-4"
-        style={{ height: "700px" }}
-      >
+      <div id="chart-container" className="w-full" style={{ height: "700px" }}>
         <HighchartsReact
           highcharts={Highcharts}
           options={{
             ...options,
             chart: {
               type: "column",
-              width: containerWidth,
               height: 700,
             },
           }}

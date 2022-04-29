@@ -3,10 +3,9 @@ import { json } from "@remix-run/node";
 import type { LoaderFunction, ActionFunction } from "@remix-run/node";
 import { createRaidTickRequest, getRaid } from "~/models/raid.server";
 import { ChevronRightIcon } from "@heroicons/react/outline";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import HighchartsReact from "highcharts-react-official";
 import Highcharts from "highcharts";
-import debounce from "lodash.debounce";
 import RequestTicksModal from "~/components/raids/requestTicksModal";
 import { getMains } from "~/models/roster.server";
 import { useOptionalUser } from "~/utils";
@@ -82,40 +81,12 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 export default function raidIdPage() {
   const user = useOptionalUser();
   const { raid, mains } = useLoaderData<LoaderData>();
-  const [mounted, setMounted] = useState(false);
-  const [containerWidth, setContainerWidth] = useState(
-    typeof window === "undefined" ? 800 : window.innerWidth - 100
-  );
   const [isRequestTicksModalOpen, setIsRequestTicksModalOpen] = useState(false);
   const [options, setOptions] = useState<HighchartsData>({
     title: { text: "Attendance and box distribution" },
     xAxis: { categories: [], crosshair: true },
     series: [],
   });
-
-  const doResize = () => {
-    let container = document.querySelector("#chart-container");
-    var width = container?.getBoundingClientRect().width;
-    if (!width) {
-      width = window.innerWidth;
-    }
-
-    setContainerWidth(width - 100);
-  };
-
-  const debouncedResize = useCallback(
-    debounce(() => {
-      doResize();
-    }, 100),
-    []
-  );
-
-  useEffect(() => {
-    window.addEventListener("resize", debouncedResize);
-    doResize();
-    setMounted(true);
-    return () => window.removeEventListener("resize", debouncedResize);
-  }, [mounted]);
 
   useEffect(() => {
     const seriesData: { name: string; data: number[] }[] = [];
@@ -228,13 +199,22 @@ export default function raidIdPage() {
             >
               Request missing ticks
             </button>
+            {["officer", "admin"].includes(user?.role ?? "guest") ? (
+              <button
+                type="button"
+                className="ml-3 inline-flex items-center rounded-md border border-transparent bg-orange-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                onClick={() => setIsRequestTicksModalOpen(true)}
+              >
+                Generate Lotto Range
+              </button>
+            ) : null}
           </div>
         ) : null}
       </div>
 
       <div
         id="chart-container"
-        className="w-full p-4"
+        className="w-full sm:p-4"
         style={{ height: "700px" }}
       >
         <HighchartsReact
@@ -243,7 +223,7 @@ export default function raidIdPage() {
             ...options,
             chart: {
               type: "column",
-              width: containerWidth,
+              // width: containerWidth,
               height: 700,
             },
             yAxis: {
