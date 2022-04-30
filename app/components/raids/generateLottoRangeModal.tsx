@@ -38,19 +38,21 @@ const GenerateLottoRangeModal: FC<HandleLottoRangeModalProps> = ({
 
   useEffect(() => {
     let total = 0;
-    const ranges = Array.from(selectedPlayers).map((p) => {
-      const res = {
-        name: p.name,
-        lower: total + 1,
-        upper:
-          total +
-          (parseInt(`${p?.total_tickets ?? p?.attendance_30 ?? 0}`, 10) + 1),
-      };
+    const ranges = Array.from(selectedPlayers)
+      .sort((p1, p2) => p1.name.localeCompare(p2.name))
+      .map((p) => {
+        const res = {
+          name: p.name,
+          lower: total + 1,
+          upper:
+            total +
+            (parseInt(`${p?.total_tickets ?? p?.attendance_30 ?? 0}`, 10) + 1),
+        };
 
-      total = res.upper;
+        total = res.upper;
 
-      return res;
-    });
+        return res;
+      });
 
     setRange(ranges.map((r) => `${r.name} ${r.lower}-${r.upper}`).join(" | "));
   }, [selectedPlayers]);
@@ -141,7 +143,7 @@ const GenerateLottoRangeModal: FC<HandleLottoRangeModalProps> = ({
                 {players.map((player) => {
                   return (
                     <div
-                      className={`col-span-3 flex items-center gap-2 rounded px-4 py-3 shadow hover:cursor-pointer hover:bg-gray-100 ${
+                      className={`col-span-4 flex items-center gap-2 rounded px-4 py-3 shadow hover:cursor-pointer hover:bg-gray-100 ${
                         selectedPlayers.has(player)
                           ? "border-2 border-blue-300"
                           : "border-2 border-white"
