@@ -119,7 +119,7 @@ export async function createBox(
     });
     boxId = addedPlayer.id;
   } else {
-    existingPlayer.name = player.name;
+    existingPlayer.name = player.name?.trim().toLowerCase();
     existingPlayer.level = player.level;
     existingPlayer.class = player.class;
     await prisma.player.update({
@@ -130,8 +130,7 @@ export async function createBox(
   }
 
   try {
-    console.log(boxId, mainId);
-    if (boxId && mainId) {
+    if (boxId && mainId && boxId != mainId) {
       await prisma.$queryRaw`
         DELETE FROM player_alt
         WHERE alt_id = ${boxId}

@@ -286,7 +286,7 @@ export default function raidIdPage() {
 
       <GenerateLottoRangeModal
         open={isGenerateLottoRangeModalOpen}
-        setOpen={setIsRequestTicksModalOpen}
+        setOpen={setIsGenerateLottoRangeModalOpen}
         players={mains}
       />
     </div>

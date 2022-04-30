@@ -237,7 +237,7 @@ export default function RaidIndexPage() {
                   "inline-flex items-baseline rounded-full px-2.5 py-0.5 text-sm font-medium md:mt-2 lg:mt-0"
                 )}
               >
-                Ticket bonus: 20
+                Lotto tickets:{player?.total_tickets ?? 0}
               </div>
             </dd>
           </div>

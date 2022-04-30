@@ -31,6 +31,7 @@ model player {
   ticks_since_last_win                          BigInt?        @default(0)
   created_at                                    DateTime?      @default(now()) @db.Timestamptz(6)
   updated_at                                    DateTime?      @default(now()) @db.Timestamptz(6)
+  total_tickets                                 BigInt?
   loot_history                                  loot_history[]
   player_alt_playerToplayer_alt_alt_id          player_alt[]   @relation("playerToplayer_alt_alt_id")
   player_alt_playerToplayer_alt_player_id       player_alt[]   @relation("playerToplayer_alt_player_id")

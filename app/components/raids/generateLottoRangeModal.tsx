@@ -1,5 +1,4 @@
 import { Dialog, Transition } from "@headlessui/react";
-import { ExclamationIcon } from "@heroicons/react/outline";
 import { player } from "@prisma/client";
 import { FC, Fragment, useRef } from "react";
 import { Form } from "remix";
