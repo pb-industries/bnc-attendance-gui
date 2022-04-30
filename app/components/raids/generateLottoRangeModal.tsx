@@ -39,7 +39,9 @@ const GenerateLottoRangeModal: FC<HandleLottoRangeModalProps> = ({
   useEffect(() => {
     let total = 0;
     const ranges = Array.from(selectedPlayers)
-      .sort((p1, p2) => p1.name.localeCompare(p2.name))
+      .sort((p1, p2) =>
+        p1.name.trim().toLowerCase().localeCompare(p2.name.trim().toLowerCase())
+      )
       .map((p) => {
         const res = {
           name: p.name,
