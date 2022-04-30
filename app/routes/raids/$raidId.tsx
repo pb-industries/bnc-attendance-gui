@@ -11,10 +11,12 @@ import GenerateLottoRangeModal from "~/components/raids/generateLottoRangeModal"
 import { getMains } from "~/models/roster.server";
 import { useOptionalUser } from "~/utils";
 import { requireUser } from "~/session.server";
+import { player } from "@prisma/client";
 
 type LoaderData = {
   raid: Awaited<ReturnType<typeof getRaid>>;
   mains: Awaited<ReturnType<typeof getMains>> | player[];
+  player: player;
 };
 
 type HighchartsData = {
@@ -70,18 +72,16 @@ export const action: ActionFunction = async ({ request }) => {
 export const loader: LoaderFunction = async ({ request, params }) => {
   const user = await requireUser(request);
   const raid = await getRaid({ id: (params.raidId ?? 0) as unknown as number });
-  const mains = ["officer", "admin"].includes(
-    user?.role?.toLowerCase() ?? "guest"
-  )
-    ? await getMains()
-    : [user?.player];
-
-  return json<LoaderData>({ raid, mains });
+  return json<LoaderData>({
+    raid,
+    mains: await getMains(),
+    player: user?.player,
+  });
 };
 
 export default function raidIdPage() {
   const user = useOptionalUser();
-  const { raid, mains } = useLoaderData<LoaderData>();
+  const { raid, mains, player } = useLoaderData<LoaderData>();
   const [isRequestTicksModalOpen, setIsRequestTicksModalOpen] = useState(false);
   const [isGenerateLottoRangeModalOpen, setIsGenerateLottoRangeModalOpen] =
     useState(false);
@@ -278,7 +278,11 @@ export default function raidIdPage() {
       <RequestTicksModal
         open={isRequestTicksModalOpen}
         setOpen={setIsRequestTicksModalOpen}
-        players={mains}
+        players={
+          ["officer", "admin"].includes(user?.role ?? "guest")
+            ? mains
+            : [player]
+        }
         selectedPlayerId={user?.player_id}
         totalTicks={raid.total_ticks}
         raidId={raid.id!}

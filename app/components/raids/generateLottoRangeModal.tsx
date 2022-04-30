@@ -1,7 +1,8 @@
 import { Dialog, Transition } from "@headlessui/react";
+import { ClipboardIcon } from "@heroicons/react/outline";
 import { player } from "@prisma/client";
-import { FC, Fragment, useRef } from "react";
-import { Form } from "remix";
+import { FC, Fragment, useEffect, useRef, useState } from "react";
+import { CopyToClipboard } from "react-copy-to-clipboard";
 
 interface HandleLottoRangeModalProps {
   open: boolean;
@@ -16,6 +17,42 @@ const GenerateLottoRangeModal: FC<HandleLottoRangeModalProps> = ({
 }) => {
   // @ts-ignore
   const cancelButtonRef = useRef<HTMLButtonRef>();
+  const [selectedPlayers, setSelectedPlayers] = useState(new Set<player>());
+  const [range, setRange] = useState("");
+  const [showRange, setShowRange] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
+
+  const onCopyText = () => {
+    setIsCopied(true);
+    setTimeout(() => {
+      setIsCopied(false);
+    }, 1000);
+  };
+
+  useEffect(() => {
+    if (!open) {
+      setShowRange(false);
+    }
+  }, [open]);
+
+  useEffect(() => {
+    let total = 0;
+    const ranges = Array.from(selectedPlayers).map((p) => {
+      const res = {
+        name: p.name,
+        lower: total + 1,
+        upper:
+          total +
+          (parseInt(`${p?.total_tickets ?? p?.attendance_30 ?? 0}`, 10) + 1),
+      };
+
+      total = res.upper;
+
+      return res;
+    });
+
+    setRange(ranges.map((r) => `${r.name} ${r.lower}-${r.upper}`).join(" | "));
+  }, [selectedPlayers]);
 
   return (
     <Transition.Root show={open} as={Fragment}>
@@ -54,59 +91,120 @@ const GenerateLottoRangeModal: FC<HandleLottoRangeModalProps> = ({
             leaveFrom="opacity-100 translate-y-0 sm:scale-100"
             leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
           >
-            <div className="relative inline-block transform overflow-hidden rounded-lg bg-white text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:align-middle">
+            <div className="relative inline-block transform overflow-hidden rounded-lg bg-white text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-xl sm:align-middle">
               <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div className="sm:flex sm:items-start">
-                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                  <div className="mt-3 w-full text-center sm:mt-0 sm:ml-4 sm:text-left">
                     <Dialog.Title
                       as="h3"
-                      className="text-lg font-medium capitalize leading-6 text-gray-900"
+                      className="flex items-center text-lg font-medium capitalize leading-6 text-gray-900"
                     >
-                      Generate Lotto Range
+                      <span className="flex-grow">Generate Lotto Range</span>
+                      <div className="flex gap-2 justify-self-end">
+                        {!showRange ? (
+                          <>
+                            <button
+                              type="submit"
+                              className="inline-flex w-full justify-center rounded-md border border-transparent bg-orange-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-orange-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 sm:w-auto sm:text-sm"
+                              onClick={() => setSelectedPlayers(new Set())}
+                            >
+                              Reset
+                            </button>
+                            <button
+                              type="submit"
+                              className="inline-flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 sm:w-auto sm:text-sm"
+                              onClick={() =>
+                                setSelectedPlayers(new Set(players))
+                              }
+                            >
+                              Select All
+                            </button>
+                          </>
+                        ) : (
+                          <button className="inline-flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 sm:w-auto sm:text-sm">
+                            <CopyToClipboard text={range} onCopy={onCopyText}>
+                              <span>{isCopied ? "Copied" : "Copy"}</span>
+                            </CopyToClipboard>
+                          </button>
+                        )}
+                      </div>
                     </Dialog.Title>
-                    <p className="mt-2 text-sm text-gray-500">
-                      If you think you're missing any ticks, you can request
-                      them here, an officer can then approve them if they
-                      believe it to be correct
-                    </p>
                   </div>
                 </div>
               </div>
-              <Form onSubmit={() => setOpen(false)} method="delete">
-                <div className="flex flex-col items-center gap-4 p-4">
-                  {players.length > 1 ? (
-                    <select className="max-w-48 capitalize" name="player.id">
-                      {players?.map((player) => (
-                        <option key={`${player.id}`} value={`${player.id}`}>
-                          {player.name}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      type="hidden"
-                      name="player.id"
-                      value={`${players?.[0]?.id}`}
-                    />
-                  )}
+              <div
+                className={`${
+                  showRange ? "hidden" : null
+                } grid grid-cols-12 gap-2 p-4`}
+              >
+                {players.map((player) => {
+                  return (
+                    <div
+                      className={`col-span-3 flex items-center gap-2 rounded px-4 py-3 shadow hover:cursor-pointer hover:bg-gray-100 ${
+                        selectedPlayers.has(player)
+                          ? "border-2 border-blue-300"
+                          : "border-2 border-white"
+                      }`}
+                      key={player.id}
+                      onClick={() => {
+                        const newPlayers = new Set(Array.from(selectedPlayers));
+                        newPlayers.has(player)
+                          ? newPlayers.delete(player)
+                          : newPlayers.add(player);
+                        setSelectedPlayers(newPlayers);
+                      }}
+                    >
+                      <img
+                        className="h-6 w-6 rounded-full"
+                        src={`/images/${player?.class || "warrior"}.png`}
+                        alt=""
+                      />
+                      <span className="text-md capitalize">{player.name}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div
+                className={`${
+                  !showRange ? "hidden" : null
+                } flex w-full items-center justify-center p-4`}
+              >
+                <div className="min-h-40 relative min-w-full rounded-md bg-gray-100 p-4">
+                  <p>{range}</p>
                 </div>
-                <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+              </div>
+              <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                {!showRange ? (
+                  <button
+                    disabled={selectedPlayers.size === 0}
+                    type="submit"
+                    className={`inline-flex w-full justify-center rounded-md border border-transparent px-4 py-2 text-base font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm ${
+                      selectedPlayers.size === 0
+                        ? "bg-gray-600 hover:bg-gray-500"
+                        : "bg-indigo-600 hover:bg-indigo-500"
+                    }`}
+                    onClick={() => setShowRange(true)}
+                  >
+                    Generate Range
+                  </button>
+                ) : (
                   <button
                     type="submit"
                     className="inline-flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
+                    onClick={() => setShowRange(false)}
                   >
-                    Make Request
+                    New Range
                   </button>
-                  <button
-                    type="button"
-                    className="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                    ref={cancelButtonRef}
-                    onClick={() => setOpen(false)}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </Form>
+                )}
+                <button
+                  type="button"
+                  className="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                  ref={cancelButtonRef}
+                  onClick={() => setOpen(false)}
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </Transition.Child>
         </div>
