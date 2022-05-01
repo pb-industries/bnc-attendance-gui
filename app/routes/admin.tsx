@@ -20,6 +20,7 @@ import {
   XIcon,
 } from "@heroicons/react/outline";
 import { getBadgeStyle } from "~/utils";
+import { useEffect, useRef } from "react";
 
 type LoaderData = {
   pendingAccounts: Awaited<ReturnType<typeof getPendingAccounts>>;
@@ -36,8 +37,14 @@ type ActionData = {
 };
 
 export const action: ActionFunction = async ({ request }) => {
+  const refreshRef = useRef<HTMLButtonElement>();
   const formData = await request.formData();
   const user = await requireUser(request);
+
+  useEffect(() => {
+    let interval = setInterval(() => refreshRef?.current?.click(), 20000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   const method = request.method;
   if (method.toUpperCase() === "POST") {
@@ -572,6 +579,11 @@ export default function RaidIndexPage() {
           </ul>
         </div>
       </div>
+      <Form className="hidden" method="get">
+        <button ref={refreshRef} type="submit">
+          Reload
+        </button>
+      </Form>
     </div>
   );
 }

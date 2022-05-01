@@ -299,7 +299,7 @@ export default function raidIdPage() {
         setOpen={setIsGenerateLottoRangeModalOpen}
         players={mains}
       />
-      <Form method="get">
+      <Form className="hidden" method="get">
         <button ref={refreshRef} type="submit">
           Reload
         </button>
