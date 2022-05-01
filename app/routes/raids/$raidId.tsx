@@ -1,9 +1,9 @@
-import { Link, useLoaderData, Outlet } from "@remix-run/react";
+import { Link, useLoaderData, Outlet, Form } from "@remix-run/react";
 import { json } from "@remix-run/node";
 import type { LoaderFunction, ActionFunction } from "@remix-run/node";
 import { createRaidTickRequest, getRaid } from "~/models/raid.server";
 import { ChevronRightIcon } from "@heroicons/react/outline";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import HighchartsReact from "highcharts-react-official";
 import Highcharts from "highcharts";
 import RequestTicksModal from "~/components/raids/requestTicksModal";
@@ -81,6 +81,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 
 export default function raidIdPage() {
   const user = useOptionalUser();
+  const refreshRef = useRef<HTMLButtonElement>();
   const { raid, mains, player } = useLoaderData<LoaderData>();
   const [isRequestTicksModalOpen, setIsRequestTicksModalOpen] = useState(false);
   const [isGenerateLottoRangeModalOpen, setIsGenerateLottoRangeModalOpen] =
@@ -90,6 +91,11 @@ export default function raidIdPage() {
     xAxis: { categories: [], crosshair: true },
     series: [],
   });
+
+  useEffect(() => {
+    let interval = setInterval(() => refreshRef?.current?.click(), 20000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   useEffect(() => {
     const seriesData: { name: string; data: number[] }[] = [];
@@ -293,6 +299,11 @@ export default function raidIdPage() {
         setOpen={setIsGenerateLottoRangeModalOpen}
         players={mains}
       />
+      <Form method="get">
+        <button ref={refreshRef} type="submit">
+          Reload
+        </button>
+      </Form>
     </div>
   );
 }
