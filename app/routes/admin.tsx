@@ -37,14 +37,8 @@ type ActionData = {
 };
 
 export const action: ActionFunction = async ({ request }) => {
-  const refreshRef = useRef<HTMLButtonElement>();
   const formData = await request.formData();
   const user = await requireUser(request);
-
-  useEffect(() => {
-    let interval = setInterval(() => refreshRef?.current?.click(), 20000);
-    return () => clearInterval(interval);
-  }, [user]);
 
   const method = request.method;
   if (method.toUpperCase() === "POST") {
@@ -187,6 +181,13 @@ function classNames(...classes: string[]) {
 export default function RaidIndexPage() {
   const { pendingAccounts, tickApprovals, recentApprovals } =
     useLoaderData<LoaderData>();
+  const refreshRef = useRef<HTMLButtonElement>();
+
+  useEffect(() => {
+    let interval = setInterval(() => refreshRef?.current?.click(), 20000);
+    return () => clearInterval(interval);
+  }, [pendingAccounts]);
+
   return (
     <div className="w-full">
       <div>
