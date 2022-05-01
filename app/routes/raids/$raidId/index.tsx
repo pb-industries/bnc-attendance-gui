@@ -1,17 +1,60 @@
-import { json, Link, LoaderFunction, useLoaderData } from "remix";
+import {
+  ActionFunction,
+  Form,
+  json,
+  Link,
+  LoaderFunction,
+  useLoaderData,
+} from "remix";
 import { requireUser } from "~/session.server";
 import { getLootForRaid } from "~/models/loot.server";
+import { useOptionalUser } from "~/utils";
+import {
+  CurrencyDollarIcon,
+  ShieldCheckIcon,
+  StarIcon,
+  TrashIcon,
+  XIcon,
+} from "@heroicons/react/outline";
+import { prisma } from "~/db.server";
 
 type LoaderData = { loot: Awaited<ReturnType<typeof getLootForRaid>> };
 
 export const loader: LoaderFunction = async ({ request, params }) => {
-  const user = await requireUser(request);
+  const loot = await getLootForRaid(BigInt(params.raidId ?? 0));
+
+  return json<LoaderData>({ loot });
+};
+
+export const action: ActionFunction = async ({ request, params }) => {
+  const user = requireUser(request);
+  const formData = await request.formData();
+
+  const itemId = BigInt(`${formData.get("item_id") ?? 0}`);
+  const category = formData.get("category");
+
+  if (!itemId || typeof category !== "string") {
+    return null;
+  }
+
+  if (!user) {
+    return null;
+  }
+
+  await prisma.item.update({
+    where: { id: itemId },
+    data: {
+      category,
+    },
+  });
+
   const loot = await getLootForRaid(BigInt(params.raidId ?? 0));
 
   return json<LoaderData>({ loot });
 };
 
 export default function () {
+  const user = useOptionalUser();
   const { loot } = useLoaderData<LoaderData>();
   return (
     <div className="grid grid-cols-12 gap-8">
@@ -56,6 +99,14 @@ export default function () {
               >
                 Looted at
               </th>
+              {["admin", "officer"].includes(user?.role ?? "guest") ? (
+                <th
+                  scope="col"
+                  className="font-semibolds px-3 py-3.5 text-left text-sm text-gray-900"
+                >
+                  Action
+                </th>
+              ) : null}
             </tr>
           </thead>
           <tbody>
@@ -93,6 +144,52 @@ export default function () {
                   <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 ">
                     {date?.substring(0, date?.indexOf("T"))}
                   </td>
+                  {["admin", "officer"].includes(user?.role ?? "guest") ? (
+                    <td className="flex gap-1 whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">
+                      <Form method="post">
+                        <input type="hidden" name="category" value="bis" />
+                        <input
+                          type="hidden"
+                          name="item_id"
+                          value={`${lh.item.id}`}
+                        />
+                        <button
+                          type="submit"
+                          className="h-8 w-8 rounded-sm bg-green-500 p-1 text-white hover:bg-green-600"
+                        >
+                          <ShieldCheckIcon />
+                        </button>
+                      </Form>
+                      <Form method="post">
+                        <input type="hidden" name="category" value="cash" />
+                        <input
+                          type="hidden"
+                          name="item_id"
+                          value={`${lh.item.id}`}
+                        />
+                        <button
+                          type="submit"
+                          className="h-8 w-8 rounded-sm bg-orange-500 p-1 text-white hover:bg-orange-600"
+                        >
+                          <CurrencyDollarIcon />
+                        </button>
+                      </Form>
+                      <Form method="post">
+                        <input type="hidden" name="category" value="trash" />
+                        <input
+                          type="hidden"
+                          name="item_id"
+                          value={`${lh.item.id}`}
+                        />
+                        <button
+                          type="submit"
+                          className="h-8 w-8 rounded-sm bg-red-500 p-1 text-white hover:bg-red-600"
+                        >
+                          <TrashIcon />
+                        </button>
+                      </Form>
+                    </td>
+                  ) : null}
                 </tr>
               );
             })}
