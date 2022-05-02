@@ -71,6 +71,17 @@ export default function () {
   const { loot } = useLoaderData<LoaderData>();
   const [activeCategory, setActiveCategory] = useState<Category>("bis");
   useEffect(() => {
+    if (
+      // @ts-ignore
+      typeof zamTooltip !== "undefined" &&
+      // @ts-ignore
+      zamTooltip.hasOwnProperty("init")
+    ) {
+      // @ts-ignore
+      zamTooltip.init();
+    }
+  }, [activeCategory]);
+  useEffect(() => {
     if (!loot) {
       return;
     }
@@ -99,7 +110,9 @@ export default function () {
               className={`${
                 c === activeCategory ? "bg-gray-200" : "bg-white"
               } flex items-center justify-center gap-1 rounded-lg border border-gray-200 px-4 py-2 text-sm capitalize shadow hover:cursor-pointer hover:bg-gray-100`}
-              onClick={() => setActiveCategory(c)}
+              onClick={() => {
+                setActiveCategory(c);
+              }}
               key={c}
             >
               {c}{" "}
