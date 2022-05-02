@@ -75,7 +75,12 @@ export default function () {
       return;
     }
 
-    const counts: { [key in Category]: number } = { ...categoryCounts };
+    const counts: { [key in Category]: number } = {
+      bis: 0,
+      cash: 0,
+      trash: 0,
+      uncategorized: 0,
+    };
 
     loot.forEach(({ item }) => {
       const category = (item?.category || "uncategorized") as Category;
