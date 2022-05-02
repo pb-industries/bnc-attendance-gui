@@ -163,3 +163,42 @@ export function validatePlayer(playerData: player): playerData is player {
 
   return true;
 }
+
+const changeTimezone = (date: Date, timeZone?: string) => {
+  if (!timeZone) {
+    timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  }
+
+  return new Date(
+    date.toLocaleString("en-US", {
+      timeZone,
+    })
+  );
+};
+
+const padTo2Digits = (num: number) => {
+  return num.toString().padStart(2, "0");
+};
+
+export function formatDate(date: Date, timeOnly?: boolean, timeZone?: string) {
+  date = changeTimezone(date, timeZone);
+
+  const parts = [
+    [
+      date.getFullYear(),
+      padTo2Digits(date.getMonth() + 1),
+      padTo2Digits(date.getDate()),
+    ].join("-"),
+    [
+      padTo2Digits(date.getHours()),
+      padTo2Digits(date.getMinutes()),
+      padTo2Digits(date.getSeconds()),
+    ].join(":"),
+  ];
+
+  if (timeOnly) {
+    return parts[1];
+  }
+
+  return parts.join(" ");
+}

@@ -8,7 +8,7 @@ import {
 } from "remix";
 import { requireUser } from "~/session.server";
 import { getLootForRaid } from "~/models/loot.server";
-import { useOptionalUser } from "~/utils";
+import { formatDate, useOptionalUser } from "~/utils";
 import {
   CurrencyDollarIcon,
   ShieldCheckIcon,
@@ -64,6 +64,7 @@ export default function () {
     "trash",
     "uncategorized",
   ]);
+  const [mounted, setMounted] = useState(false);
   const [categoryCounts, setCategoryCounts] = useState<{
     [key in Category]: number;
   }>({ bis: 0, cash: 0, trash: 0, uncategorized: 0 });
@@ -95,6 +96,17 @@ export default function () {
     newLoot.splice(idx, 1);
     setLoot(newLoot);
   };
+
+  useEffect(() => {
+    if (
+      typeof zamTooltip !== "undefined" &&
+      zamTooltip.hasOwnProperty("init") &&
+      !mounted
+    ) {
+      zamTooltip.init();
+      setMounted(true);
+    }
+  }, [lootRaw]);
   return (
     <div className="grid grid-cols-12 gap-8">
       <div className="col-span-12">
@@ -170,7 +182,7 @@ export default function () {
             {loot.map((lh, idx) => {
               const date = new Date(
                 Date.parse(lh?.created_at as unknown as string)
-              ).toISOString();
+              );
               return (
                 <tr
                   className={
@@ -208,7 +220,7 @@ export default function () {
                     {lh.was_assigned ? "Assigned" : "Rolled for"}
                   </td>
                   <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 ">
-                    {date?.substring(0, date?.indexOf("T"))}
+                    {formatDate(date, true)}
                   </td>
                   {["admin", "officer"].includes(user?.role ?? "guest") ? (
                     <td className="flex gap-1 whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">
