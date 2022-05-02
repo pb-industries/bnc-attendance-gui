@@ -17,7 +17,7 @@ import {
   XIcon,
 } from "@heroicons/react/outline";
 import { prisma } from "~/db.server";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type LoaderData = { loot: Awaited<ReturnType<typeof getLootForRaid>> };
 
@@ -64,20 +64,43 @@ export default function () {
     "trash",
     "uncategorized",
   ]);
+  const [categoryCounts, setCategoryCounts] = useState<{
+    [key in Category]: number;
+  }>({ bis: 0, cash: 0, trash: 0, uncategorized: 0 });
+
   const { loot } = useLoaderData<LoaderData>();
   const [activeCategory, setActiveCategory] = useState<Category>("bis");
+  useEffect(() => {
+    if (!loot) {
+      return;
+    }
+
+    const counts: { [key in Category]: number } = { ...categoryCounts };
+
+    loot.forEach(({ item }) => {
+      const category = (item?.category || "uncategorized") as Category;
+      counts[category] = (counts[category] ?? 0) + 1;
+    });
+
+    setCategoryCounts(counts);
+  }, [loot]);
   return (
     <div className="grid grid-cols-12 gap-8">
       <div className="col-span-12">
         <h1 className="text-2xl font-medium">Items looted</h1>
-        <div className="flex gap-1 pt-4">
+        <div className="flex gap-2 pt-4">
           {categories.map((c) => (
             <div
-              className="rounded-lg border border-gray-200 px-4 py-2 uppercase shadow hover:cursor-pointer hover:bg-gray-100"
+              className={`${
+                c === activeCategory ? "bg-gray-200" : "bg-white"
+              } flex items-center justify-center gap-1 rounded-lg border border-gray-200 px-4 py-2 text-sm capitalize shadow hover:cursor-pointer hover:bg-gray-100`}
               onClick={() => setActiveCategory(c)}
               key={c}
             >
-              {c}
+              {c}{" "}
+              <span className="rounded-md bg-gray-200 p-1 px-2 text-xs font-medium text-gray-900">
+                {categoryCounts[c] ?? 0}
+              </span>
             </div>
           ))}
         </div>
