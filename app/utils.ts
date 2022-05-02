@@ -202,3 +202,27 @@ export function formatDate(date: Date, timeOnly?: boolean, timeZone?: string) {
 
   return parts.join(" ");
 }
+
+export function getRollRange(players: Set<player>) {
+  let total = 0;
+
+  const ranges = Array.from(players)
+    .sort((p1, p2) =>
+      p1.name.trim().toLowerCase().localeCompare(p2.name.trim().toLowerCase())
+    )
+    .map((p) => {
+      const res = {
+        name: p.name,
+        lower: total + 1,
+        upper:
+          total +
+          (parseInt(`${p?.total_tickets ?? p?.attendance_30 ?? 0}`, 10) + 1),
+      };
+
+      total = res.upper;
+
+      return res;
+    });
+
+  return ranges.map((r) => `${r.name} ${r.lower}-${r.upper}`).join(" | ");
+}

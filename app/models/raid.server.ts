@@ -24,7 +24,11 @@ export async function getRaid({ id }: Pick<raid, "id">) {
     },
   });
 
-  const { player_raid, ...raid } = details ?? {};
+  const latestRaid = await prisma.raid.findFirst({
+    orderBy: { created_at: "desc" },
+  });
+
+  const { player_raid, ...raid } = details ?? { id: null };
   let maxTick = 0;
   details?.player_raid.forEach(({ raid_hour }) => {
     maxTick = Math.max(parseInt(`${raid_hour}`), maxTick);
@@ -69,9 +73,6 @@ export async function getRaid({ id }: Pick<raid, "id">) {
 
   const parsedAttendees = Object.values(attendees).map(
     ({ ticks, ...attendee }) => {
-      if (attendee.name == "karadin") {
-        console.log("Got ticks", ticks);
-      }
       const newTicks: { [key: string]: string[] } = {};
       Object.keys(ticks).forEach((key) => {
         newTicks[key] = Array.from(ticks[key]);
@@ -83,13 +84,12 @@ export async function getRaid({ id }: Pick<raid, "id">) {
     }
   );
 
-  const res = {
-    ...raid,
+  return {
+    isLive: latestRaid?.id === raid?.id,
     total_ticks: maxTick + 1, // ticks are 0 indexed
     attendees: parsedAttendees,
+    ...raid,
   };
-
-  return res;
 }
 
 interface RaidWithTotals extends raid {

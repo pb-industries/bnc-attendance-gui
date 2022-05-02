@@ -1,8 +1,8 @@
 import { Dialog, Transition } from "@headlessui/react";
-import { ClipboardIcon } from "@heroicons/react/outline";
 import { player } from "@prisma/client";
 import { FC, Fragment, useEffect, useRef, useState } from "react";
 import { CopyToClipboard } from "react-copy-to-clipboard";
+import { getRollRange } from "~/utils";
 
 interface HandleLottoRangeModalProps {
   open: boolean;
@@ -37,26 +37,7 @@ const GenerateLottoRangeModal: FC<HandleLottoRangeModalProps> = ({
   }, [open]);
 
   useEffect(() => {
-    let total = 0;
-    const ranges = Array.from(selectedPlayers)
-      .sort((p1, p2) =>
-        p1.name.trim().toLowerCase().localeCompare(p2.name.trim().toLowerCase())
-      )
-      .map((p) => {
-        const res = {
-          name: p.name,
-          lower: total + 1,
-          upper:
-            total +
-            (parseInt(`${p?.total_tickets ?? p?.attendance_30 ?? 0}`, 10) + 1),
-        };
-
-        total = res.upper;
-
-        return res;
-      });
-
-    setRange(ranges.map((r) => `${r.name} ${r.lower}-${r.upper}`).join(" | "));
+    setRange(getRollRange(selectedPlayers));
   }, [selectedPlayers]);
 
   return (

@@ -9,7 +9,7 @@ import Highcharts from "highcharts";
 import RequestTicksModal from "~/components/raids/requestTicksModal";
 import GenerateLottoRangeModal from "~/components/raids/generateLottoRangeModal";
 import { getMains } from "~/models/roster.server";
-import { useOptionalUser } from "~/utils";
+import { getRollRange, useOptionalUser } from "~/utils";
 import { requireUser } from "~/session.server";
 import { player } from "@prisma/client";
 
@@ -81,6 +81,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 
 export default function raidIdPage() {
   const user = useOptionalUser();
+  const [isCopied, setIsCopied] = useState(false);
   const refreshRef = useRef<HTMLButtonElement>();
   const { raid, mains, player } = useLoaderData<LoaderData>();
   const [isRequestTicksModalOpen, setIsRequestTicksModalOpen] = useState(false);
@@ -92,8 +93,21 @@ export default function raidIdPage() {
     series: [],
   });
 
+  const onCopyText = async () => {
+    const res = (await (
+      await fetch(`/raids/mains-at-tick?raidId=${raid.id}`)
+    ).json()) as player[];
+    const mainsAtTick = new Set(res);
+    navigator.clipboard.writeText(getRollRange(mainsAtTick));
+
+    setIsCopied(true);
+    setTimeout(() => {
+      setIsCopied(false);
+    }, 1000);
+  };
+
   useEffect(() => {
-    let interval = setInterval(() => refreshRef?.current?.click(), 20000);
+    let interval = setInterval(() => refreshRef?.current?.click(), 60000);
     return () => clearInterval(interval);
   }, [user]);
 
@@ -184,9 +198,24 @@ export default function raidIdPage() {
       </div>
       <div className="mt-4 md:flex md:items-center md:justify-between">
         <div className="min-w-0 flex-1">
-          <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl">
-            Raid: {raid.name}
-          </h2>
+          <div className="flex items-center gap-4">
+            <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl">
+              Raid: {raid.name}
+            </h2>
+            {raid.isLive &&
+            ["officer", "admin"].includes(user?.role ?? "guest") ? (
+              <button
+                onClick={onCopyText}
+                className="relative inline-flex w-full justify-center rounded-md border border-transparent bg-red-600 px-3 py-1 text-base font-medium text-white shadow-sm hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 sm:w-auto sm:text-sm"
+              >
+                <span>{isCopied ? "Copied" : "Copy Live Range"}</span>
+                <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex h-3 w-3 rounded-full bg-red-300"></span>
+                </span>
+              </button>
+            ) : null}
+          </div>
           <div className="mt-1 flex flex-col sm:mt-0 sm:flex-row sm:flex-wrap sm:space-x-6">
             <div className="mt-2 flex items-center text-sm text-gray-500">
               Total ticks: {raid.total_ticks}
@@ -214,7 +243,7 @@ export default function raidIdPage() {
                 className="ml-3 inline-flex items-center rounded-md border border-transparent bg-orange-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                 onClick={() => setIsGenerateLottoRangeModalOpen(true)}
               >
-                Generate Lotto Range
+                Generate Custom Range
               </button>
             ) : null}
           </div>

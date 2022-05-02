@@ -22,6 +22,49 @@ export async function getMains() {
   });
 }
 
+export async function getMainsAtTick(raidId: bigint, tick?: bigint) {
+  if (!tick) {
+    tick = BigInt(
+      (
+        await prisma.player_raid.aggregate({
+          _max: {
+            raid_hour: true,
+          },
+          where: { raid_id: raidId },
+        })
+      )?._max?.raid_hour || 0
+    );
+  }
+  console.log("TICK IS:", tick);
+  const attendees = await prisma.player_raid.findMany({
+    where: {
+      AND: [{ raid_id: BigInt(raidId) }, { raid_hour: BigInt(tick) }],
+    },
+    include: {
+      player: {
+        include: {
+          player_alt_playerToplayer_alt_alt_id: true,
+        },
+      },
+    },
+  });
+
+  const mainIds = attendees
+    .filter((raidTick) => {
+      // Get the optional name/id of the main
+      const mainId =
+        raidTick.player.player_alt_playerToplayer_alt_alt_id?.[0]?.player_id;
+      const playerId = raidTick.player_id;
+
+      return !mainId || mainId === playerId;
+    })
+    .map((p) => p.player_id);
+
+  const mAtTick = prisma.player.findMany({ where: { id: { in: mainIds } } });
+  console.log(mAtTick);
+  return mAtTick;
+}
+
 export async function getPlayer(playerId?: bigint) {
   if (!playerId) {
     return null;
