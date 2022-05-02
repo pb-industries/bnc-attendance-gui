@@ -54,11 +54,16 @@ export const action: ActionFunction = async ({ request, params }) => {
   return json<LoaderData>({ loot });
 };
 
-type Category = "bis" | "cash" | "trash";
+type Category = "bis" | "cash" | "trash" | "uncategorized";
 
 export default function () {
   const user = useOptionalUser();
-  const [categories] = useState<Category[]>(["bis", "cash", "trash"]);
+  const [categories] = useState<Category[]>([
+    "bis",
+    "cash",
+    "trash",
+    "uncategorized",
+  ]);
   const { loot } = useLoaderData<LoaderData>();
   const [activeCategory, setActiveCategory] = useState<Category>("bis");
   return (
@@ -131,7 +136,7 @@ export default function () {
                 const date = new Date(
                   Date.parse(lh?.created_at as unknown as string)
                 ).toISOString();
-                if (activeCategory !== lh.item.category) {
+                if (activeCategory !== (lh.item.category || "uncategorized")) {
                   return null;
                 }
                 return (
