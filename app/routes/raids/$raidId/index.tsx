@@ -54,20 +54,20 @@ export const action: ActionFunction = async ({ request, params }) => {
   return json<LoaderData>({ loot });
 };
 
-type Category = "bis" | "cash" | "trash" | "uncategorized";
+type Category = "bis" | "rolled" | "trash" | "uncategorized";
 
 export default function () {
   const user = useOptionalUser();
   const [categories] = useState<Category[]>([
     "bis",
-    "cash",
+    "rolled",
     "trash",
     "uncategorized",
   ]);
   const [mounted, setMounted] = useState(false);
   const [categoryCounts, setCategoryCounts] = useState<{
     [key in Category]: number;
-  }>({ bis: 0, cash: 0, trash: 0, uncategorized: 0 });
+  }>({ bis: 0, rolled: 0, trash: 0, uncategorized: 0 });
   const { loot: lootRaw } = useLoaderData<LoaderData>();
   const [loot, setLoot] = useState(lootRaw);
   const [activeCategory, setActiveCategory] = useState<Category>("bis");
@@ -78,7 +78,7 @@ export default function () {
 
     const counts: { [key in Category]: number } = {
       bis: 0,
-      cash: 0,
+      rolled: 0,
       trash: 0,
       uncategorized: 0,
     };
@@ -239,7 +239,7 @@ export default function () {
                         </button>
                       </Form>
                       <Form method="post">
-                        <input type="hidden" name="category" value="cash" />
+                        <input type="hidden" name="category" value="rolled" />
                         <input
                           type="hidden"
                           name="item_id"
