@@ -8,6 +8,7 @@ type LoaderData = {
   raids: Awaited<ReturnType<typeof getRaids>>;
   page: number;
   pageSize: number;
+  totalResults: number;
 };
 
 export const loader: LoaderFunction = async ({ request }) => {
