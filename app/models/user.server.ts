@@ -125,7 +125,7 @@ export async function verifyLogin(
 
   if (!userWithPassword && emailOrUsername && !emailOrUsername.includes("@")) {
     userWithPassword = await prisma.user.findFirst({
-      where: { player: { name: emailOrUsername } },
+      where: { player: { name: emailOrUsername?.toLowerCase().trim() } },
       include: {
         password: true,
       },
