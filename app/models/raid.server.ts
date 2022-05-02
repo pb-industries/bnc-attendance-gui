@@ -121,7 +121,7 @@ export async function getRaids({
     OFFSET ${parseInt(`${page * pageSize}`)}
   `;
 
-  return raids;
+  return { raids, totalResults: await prisma.raid.count() };
 }
 
 export function deleteRaid({ id }: Pick<raid, "id">) {

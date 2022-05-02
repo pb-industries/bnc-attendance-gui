@@ -15,15 +15,15 @@ export const loader: LoaderFunction = async ({ request }) => {
   const page = parseInt(url?.searchParams.get("page") ?? "0");
   const pageSize = parseInt(url.searchParams.get("pageSize") ?? "10");
 
-  const raids = await getRaids({
+  const { raids, totalResults } = await getRaids({
     page,
     pageSize,
   });
-  return json<LoaderData>({ raids, page, pageSize });
+  return json<LoaderData>({ raids, page, pageSize, totalResults });
 };
 
 export default function RaidIndexPage() {
-  const { raids, page, pageSize } = useLoaderData<LoaderData>();
+  const { raids, page, pageSize, totalResults } = useLoaderData<LoaderData>();
   return (
     <div className="w-full">
       <div>
@@ -127,9 +127,9 @@ export default function RaidIndexPage() {
         >
           <div className="hidden sm:block">
             <p className="text-sm text-gray-700">
-              Showing <span className="font-medium">1</span> to{" "}
-              <span className="font-medium">10</span> of{" "}
-              <span className="font-medium">20</span> results
+              Showing <span className="font-medium">{page + 1}</span> to{" "}
+              <span className="font-medium">{pageSize}</span> of{" "}
+              <span className="font-medium">{totalResults}</span> results
             </p>
           </div>
           <div className="flex flex-1 justify-between gap-2 sm:justify-end">
