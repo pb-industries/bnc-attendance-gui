@@ -9,13 +9,7 @@ import {
 import { requireUser } from "~/session.server";
 import { getLootForRaid } from "~/models/loot.server";
 import { formatDate, useOptionalUser } from "~/utils";
-import {
-  CurrencyDollarIcon,
-  ShieldCheckIcon,
-  StarIcon,
-  TrashIcon,
-  XIcon,
-} from "@heroicons/react/outline";
+import { CubeIcon, ShieldCheckIcon, TrashIcon } from "@heroicons/react/outline";
 import { prisma } from "~/db.server";
 import { useEffect, useState } from "react";
 
@@ -249,7 +243,7 @@ export default function () {
                           type="submit"
                           className="h-8 w-8 rounded-sm bg-orange-500 p-1 text-white hover:bg-orange-600"
                         >
-                          <CurrencyDollarIcon />
+                          <CubeIcon />
                         </button>
                       </Form>
                       <Form method="post">
