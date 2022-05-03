@@ -233,7 +233,6 @@ export function getRollRange(
     });
 
   if (debug) {
-    console.log(ranges, players);
     return ranges
       .map((r) => {
         const boxes =
