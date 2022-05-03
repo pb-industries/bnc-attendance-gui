@@ -1,4 +1,5 @@
 import { prisma } from "~/db.server";
+import { calculateAttendance } from "./api.server";
 
 export async function getPendingAccounts() {
   return await prisma.user.findMany({
@@ -69,7 +70,32 @@ export async function approveRaidTick(
         raid_hour: raidHour,
       },
     });
+    await fixTickTimes();
+    calculateAttendance();
   }
+}
+
+async function fixTickTimes() {
+  await prisma.$queryRaw`
+    update player_raid AS pr
+    set created_at = tb.first_created
+    from (
+      select *, (tmp.last_created - tmp.first_created)::int AS diff
+      from (
+        select
+          raid_id,
+          raid_hour,
+          min(created_at) AS first_created,
+          max(created_at) AS last_created
+        from player_raid
+        group by raid_id, raid_hour
+      ) tmp
+      where (tmp.last_created - tmp.first_created)::int >= (60 * 60)
+    ) AS tb
+    where pr.created_at = tb.last_created
+    and pr.raid_id = tb.raid_id
+    and pr.raid_hour = tb.raid_hour
+  `;
 }
 
 export async function rejectRaidTick(
@@ -105,4 +131,5 @@ export async function deleteRaidTick(
       },
     },
   });
+  calculateAttendance();
 }

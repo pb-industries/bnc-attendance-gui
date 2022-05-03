@@ -20,7 +20,13 @@ export const loader: LoaderFunction = async ({ request }) => {
     page,
     pageSize,
   });
-  return json<LoaderData>({ raids, page, pageSize, totalResults });
+  return json<LoaderData>({
+    raids,
+    page,
+    pageSize,
+    totalResults,
+    attendedTicks,
+  });
 };
 
 export default function RaidIndexPage() {
@@ -71,7 +77,7 @@ export default function RaidIndexPage() {
                 scope="col"
                 className="font-semibolds hidden px-3 py-3.5 text-left text-sm text-gray-900 sm:table-cell"
               >
-                Split
+                Attended Ticks
               </th>
               <th
                 scope="col"
@@ -106,7 +112,7 @@ export default function RaidIndexPage() {
                     </Link>
                   </td>
                   <td className="hidden whitespace-nowrap py-4 pr-3 text-sm font-medium text-gray-900 sm:table-cell">
-                    {raid.split}
+                    {}/{raid.total_ticks}
                   </td>
                   <td className="hidden whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 lg:table-cell">
                     {raid.total_mains}

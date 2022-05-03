@@ -58,9 +58,8 @@ export const action: ActionFunction = async ({ request, params }) => {
     },
   });
 
-  const res = await calculateAttendance();
-
-  return json<ActionData>({ success: res !== null });
+  calculateAttendance();
+  return json<ActionData>({ success: true });
 };
 
 export default function () {
