@@ -2,13 +2,13 @@ import { Link, useLoaderData, Outlet, Form } from "@remix-run/react";
 import { json } from "@remix-run/node";
 import type { LoaderFunction, ActionFunction } from "@remix-run/node";
 import { createRaidTickRequest, getRaid } from "~/models/raid.server";
-import { ChevronRightIcon } from "@heroicons/react/outline";
+import { ChevronRightIcon, CheckIcon, EyeIcon } from "@heroicons/react/outline";
 import { useEffect, useRef, useState } from "react";
 import HighchartsReact from "highcharts-react-official";
 import Highcharts from "highcharts";
 import RequestTicksModal from "~/components/raids/requestTicksModal";
 import GenerateLottoRangeModal from "~/components/raids/generateLottoRangeModal";
-import { getMains } from "~/models/roster.server";
+import { getMains, getMainsAtTick } from "~/models/roster.server";
 import { getRollRange, useOptionalUser } from "~/utils";
 import { requireUser } from "~/session.server";
 import { player } from "@prisma/client";
@@ -82,6 +82,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 export default function raidIdPage() {
   const user = useOptionalUser();
   const [isCopied, setIsCopied] = useState(false);
+  const [isDebugCopied, setIsDebugCopied] = useState(false);
   const refreshRef = useRef<HTMLButtonElement>();
   const { raid, mains, player } = useLoaderData<LoaderData>();
   const [isRequestTicksModalOpen, setIsRequestTicksModalOpen] = useState(false);
@@ -94,15 +95,28 @@ export default function raidIdPage() {
   });
 
   const onCopyText = async () => {
-    const res = (await (
+    const res: Awaited<ReturnType<typeof getMainsAtTick>> = await (
       await fetch(`/raids/mains-at-tick?raidId=${raid.id}`)
-    ).json()) as player[];
+    ).json();
     const mainsAtTick = new Set(res);
     navigator.clipboard.writeText(getRollRange(mainsAtTick));
 
     setIsCopied(true);
     setTimeout(() => {
       setIsCopied(false);
+    }, 1000);
+  };
+
+  const onCopyDebugText = async () => {
+    const res: Awaited<ReturnType<typeof getMainsAtTick>> = await (
+      await fetch(`/raids/mains-at-tick?raidId=${raid.id}`)
+    ).json();
+    const mainsAtTick = new Set(res);
+    navigator.clipboard.writeText(getRollRange(mainsAtTick, true));
+
+    setIsDebugCopied(true);
+    setTimeout(() => {
+      setIsDebugCopied(false);
     }, 1000);
   };
 
@@ -204,16 +218,36 @@ export default function raidIdPage() {
             </h2>
             {raid.isLive &&
             ["officer", "admin"].includes(user?.role ?? "guest") ? (
-              <button
-                onClick={onCopyText}
-                className="relative inline-flex w-full justify-center rounded-md border border-transparent bg-red-600 px-3 py-1 text-base font-medium text-white shadow-sm hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 sm:w-auto sm:text-sm"
-              >
-                <span>{isCopied ? "Copied" : "Copy Live Range"}</span>
-                <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
-                  <span className="relative inline-flex h-3 w-3 rounded-full bg-red-300"></span>
-                </span>
-              </button>
+              <div className="flex items-center">
+                <button
+                  onClick={onCopyText}
+                  className="relative inline-flex w-full justify-center rounded-l-md border border-transparent bg-red-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 sm:w-auto sm:text-sm"
+                >
+                  <span>{isCopied ? "Copied" : "Copy Live Range"}</span>
+                </button>
+                <button
+                  onClick={onCopyDebugText}
+                  className="relative inline-flex w-full justify-center rounded-r-md border border-l border-transparent border-l-red-100 bg-gray-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 sm:w-auto sm:text-sm"
+                >
+                  <span>
+                    {isDebugCopied ? (
+                      <CheckIcon
+                        className="h-5 w-5 flex-shrink-0 text-white"
+                        aria-hidden="true"
+                      />
+                    ) : (
+                      <EyeIcon
+                        className="h-5 w-5 flex-shrink-0 text-white"
+                        aria-hidden="true"
+                      />
+                    )}
+                  </span>
+                  <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex h-3 w-3 rounded-full bg-red-300"></span>
+                  </span>
+                </button>
+              </div>
             ) : null}
           </div>
           <div className="mt-1 flex flex-col sm:mt-0 sm:flex-row sm:flex-wrap sm:space-x-6">

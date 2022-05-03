@@ -1,13 +1,13 @@
 import { Dialog, Transition } from "@headlessui/react";
-import { player } from "@prisma/client";
 import { FC, Fragment, useEffect, useRef, useState } from "react";
 import { CopyToClipboard } from "react-copy-to-clipboard";
-import { getRollRange } from "~/utils";
+import { getRollRange, PlayerWithBoxes } from "~/utils";
+import { EyeIcon } from "@heroicons/react/outline";
 
 interface HandleLottoRangeModalProps {
   open: boolean;
   setOpen: (open: boolean) => void;
-  players: player[];
+  players: PlayerWithBoxes[];
 }
 
 const GenerateLottoRangeModal: FC<HandleLottoRangeModalProps> = ({
@@ -17,9 +17,12 @@ const GenerateLottoRangeModal: FC<HandleLottoRangeModalProps> = ({
 }) => {
   // @ts-ignore
   const cancelButtonRef = useRef<HTMLButtonRef>();
-  const [selectedPlayers, setSelectedPlayers] = useState(new Set<player>());
+  const [selectedPlayers, setSelectedPlayers] = useState(
+    new Set<PlayerWithBoxes>()
+  );
   const [range, setRange] = useState("");
   const [showRange, setShowRange] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
 
   const onCopyText = () => {
@@ -32,13 +35,16 @@ const GenerateLottoRangeModal: FC<HandleLottoRangeModalProps> = ({
   useEffect(() => {
     if (!open) {
       setShowRange(false);
-      setSelectedPlayers(new Set<player>());
+      setShowDebug(false);
+      setSelectedPlayers(new Set<PlayerWithBoxes>());
     }
   }, [open]);
 
   useEffect(() => {
-    setRange(getRollRange(selectedPlayers));
-  }, [selectedPlayers]);
+    if (showRange === true) {
+      setRange(getRollRange(selectedPlayers, showDebug));
+    }
+  }, [showRange]);
 
   return (
     <Transition.Root show={open} as={Fragment}>
@@ -153,32 +159,55 @@ const GenerateLottoRangeModal: FC<HandleLottoRangeModalProps> = ({
               <div
                 className={`${
                   !showRange ? "hidden" : null
-                } flex w-full items-center justify-center p-4`}
+                } flex w-full items-center justify-center gap-2 p-4`}
               >
                 <div className="min-h-40 relative min-w-full rounded-md bg-gray-100 p-4">
                   <p>{range}</p>
                 </div>
               </div>
-              <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+              <div className="gap-2 bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
                 {!showRange ? (
-                  <button
-                    disabled={selectedPlayers.size === 0}
-                    type="submit"
-                    className={`inline-flex w-full justify-center rounded-md border border-transparent px-4 py-2 text-base font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm ${
-                      selectedPlayers.size === 0
-                        ? "bg-gray-600 hover:bg-gray-500"
-                        : "bg-indigo-600 hover:bg-indigo-500"
-                    }`}
-                    onClick={() => setShowRange(true)}
-                  >
-                    Generate Range
-                  </button>
+                  <>
+                    <div className="flex items-center">
+                      <button
+                        disabled={selectedPlayers.size === 0}
+                        onClick={() => setShowRange(true)}
+                        className={`relative inline-flex w-full justify-center rounded-l-md border border-transparent px-4 py-2 text-base font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 sm:w-auto sm:text-sm ${
+                          selectedPlayers.size === 0
+                            ? "bg-gray-600 hover:bg-gray-500"
+                            : "bg-indigo-600 hover:bg-indigo-500"
+                        }`}
+                      >
+                        <span>Generate Range</span>
+                      </button>
+                      <button
+                        disabled={selectedPlayers.size === 0}
+                        onClick={() => {
+                          setShowDebug(true);
+                          setShowRange(true);
+                        }}
+                        className={`relative inline-flex w-full justify-center rounded-r-md border border-transparent px-4 py-2 text-base font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 sm:w-auto sm:text-sm ${
+                          selectedPlayers.size === 0
+                            ? "bg-gray-600 hover:bg-gray-500"
+                            : "bg-gray-600 hover:bg-gray-500"
+                        }`}
+                      >
+                        <span>
+                          <EyeIcon
+                            className="h-5 w-5 flex-shrink-0 text-white"
+                            aria-hidden="true"
+                          />
+                        </span>
+                      </button>
+                    </div>
+                  </>
                 ) : (
                   <button
                     type="submit"
                     className="inline-flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
                     onClick={() => {
                       setShowRange(false);
+                      setShowDebug(false);
                       setSelectedPlayers(new Set());
                     }}
                   >

@@ -8,6 +8,7 @@ export async function getMains() {
   const players = await prisma.player.findMany({
     include: {
       player_alt_playerToplayer_alt_alt_id: true,
+      player_alt_playerToplayer_alt_player_id: true,
     },
     orderBy: {
       name: "asc",
@@ -35,7 +36,6 @@ export async function getMainsAtTick(raidId: bigint, tick?: bigint) {
       )?._max?.raid_hour || 0
     );
   }
-  console.log("TICK IS:", tick);
   const attendees = await prisma.player_raid.findMany({
     where: {
       AND: [{ raid_id: BigInt(raidId) }, { raid_hour: BigInt(tick) }],
@@ -60,8 +60,10 @@ export async function getMainsAtTick(raidId: bigint, tick?: bigint) {
     })
     .map((p) => p.player_id);
 
-  const mAtTick = prisma.player.findMany({ where: { id: { in: mainIds } } });
-  console.log(mAtTick);
+  const mAtTick = prisma.player.findMany({
+    where: { id: { in: mainIds } },
+    include: { player_alt_playerToplayer_alt_player_id: true },
+  });
   return mAtTick;
 }
 

@@ -1,8 +1,9 @@
-import { player } from "@prisma/client";
+import { player, player_alt } from "@prisma/client";
 import { useMatches } from "@remix-run/react";
 import { useMemo } from "react";
 
 import type { user } from "~/models/user.server";
+import { getMainsAtTick } from "./models/roster.server";
 
 const DEFAULT_REDIRECT = "/";
 
@@ -203,16 +204,23 @@ export function formatDate(date: Date, timeOnly?: boolean, timeZone?: string) {
   return parts.join(" ");
 }
 
-export function getRollRange(players: Set<player>) {
+export type PlayerWithBoxes = player & {
+  player_alt_playerToplayer_alt_player_id: player_alt[];
+};
+
+export function getRollRange(
+  players: Set<PlayerWithBoxes>,
+  debug: boolean = false
+) {
   let total = 0;
 
   const ranges = Array.from(players)
     .sort((p1, p2) =>
-      p1.name.trim().toLowerCase().localeCompare(p2.name.trim().toLowerCase())
+      p1?.name.trim().toLowerCase().localeCompare(p2?.name.trim().toLowerCase())
     )
     .map((p) => {
       const res = {
-        name: p.name,
+        p: p,
         lower: total + 1,
         upper:
           total +
@@ -224,5 +232,17 @@ export function getRollRange(players: Set<player>) {
       return res;
     });
 
-  return ranges.map((r) => `${r.name} ${r.lower}-${r.upper}`).join(" | ");
+  if (debug) {
+    console.log(ranges, players);
+    return ranges
+      .map((r) => {
+        const boxes =
+          r?.p?.player_alt_playerToplayer_alt_player_id?.length ?? 0;
+        const boxString = boxes > 0 ? ` ${boxes + 1}-box |` : "";
+        return `${r.p.name} (${r.p.attendance_30}% |${boxString} ${r.p.ticks_since_last_win} ticks since last BiS) ${r.lower}-${r.upper}`;
+      })
+      .join(" | ");
+  }
+
+  return ranges.map((r) => `${r.p.name} ${r.lower}-${r.upper}`).join(" | ");
 }
