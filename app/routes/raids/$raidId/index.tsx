@@ -9,9 +9,14 @@ import {
 import { requireUser } from "~/session.server";
 import { getLootForRaid } from "~/models/loot.server";
 import { formatDate, useOptionalUser } from "~/utils";
-import { CubeIcon, ShieldCheckIcon, TrashIcon } from "@heroicons/react/outline";
+import {
+  CubeIcon,
+  ShieldCheckIcon,
+  TrashIcon,
+  XIcon,
+} from "@heroicons/react/outline";
 import { prisma } from "~/db.server";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type LoaderData = { loot: Awaited<ReturnType<typeof getLootForRaid>> };
 
@@ -58,12 +63,13 @@ export default function () {
     "trash",
     "uncategorized",
   ]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [mounted, setMounted] = useState(false);
   const [categoryCounts, setCategoryCounts] = useState<{
     [key in Category]: number;
   }>({ bis: 0, rolled: 0, trash: 0, uncategorized: 0 });
   const { loot: lootRaw } = useLoaderData<LoaderData>();
-  const [lootData, setSortedLootData] = useState(lootRaw);
+  const [sortedLootData, setSortedLootData] = useState<any[]>([]);
   const [activeCategory, setActiveCategory] = useState<Category>("bis");
   const [sortConfig, setSortConfig] = useState<{
     key: string;
@@ -77,6 +83,26 @@ export default function () {
     }
     setSortConfig({ key, direction });
   };
+
+  const renderSortIndicator = (col: string) => {
+    if (sortConfig?.key === col) {
+      return sortConfig.direction === "ascending" ? " ▲" : " ▼";
+    }
+  };
+
+  useMemo(() => {
+    const filteredData = sortedLootData.map((item) => {
+      return {
+        ...item,
+        hidden: !(
+          item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.looted_by_name.toLowerCase().includes(searchTerm.toLowerCase())
+        ),
+      };
+    });
+
+    setSortedLootData(filteredData);
+  }, [searchTerm]);
 
   useMemo(() => {
     if (!lootRaw) {
@@ -96,14 +122,26 @@ export default function () {
     });
 
     setCategoryCounts(counts);
-    setSortedLootData(lootRaw);
-    let sortedLootData = [...lootData];
+    let sortedLootData = lootRaw.map((l) => {
+      return {
+        ...l.item,
+        quantity: l.quantity,
+        id: l.id,
+        item_id: l.item_id,
+        was_assigned: l.was_assigned,
+        looted_by_id: l.looted_by_id,
+        looted_at: l.created_at,
+        looted_by_name: l.player.name,
+        hidden: false,
+      };
+    });
     if (sortConfig?.key && sortConfig?.direction) {
       sortedLootData.sort((a, b) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) {
+        const key = sortConfig.key as keyof typeof a;
+        if (a?.[key]! < b?.[key]!) {
           return sortConfig.direction === "ascending" ? -1 : 1;
         }
-        if (a[sortConfig.key] > b[sortConfig.key]) {
+        if (a?.[key]! > b?.[key]!) {
           return sortConfig.direction === "ascending" ? 1 : -1;
         }
         return 0;
@@ -111,8 +149,9 @@ export default function () {
     }
     setSortedLootData(sortedLootData);
   }, [lootRaw, sortConfig]);
+
   const removeItem = (idx: number) => {
-    const newLoot = [...lootData];
+    const newLoot = [...sortedLootData];
     newLoot.splice(idx, 1);
     setSortedLootData(newLoot);
   };
@@ -127,37 +166,60 @@ export default function () {
       setMounted(true);
     }
   }, [lootRaw]);
+
   return (
-    <div className="grid grid-cols-12 gap-8">
+    <div className="grid min-h-[500px] grid-cols-12 gap-8">
       <div className="col-span-12">
         <h1 className="text-2xl font-medium">Items looted</h1>
-        <div className="flex gap-2 pt-4">
-          {categories.map((c) => (
+        <div className="flex justify-between">
+          <div className="flex gap-2 pt-4">
+            {categories.map((c) => (
+              <div
+                className={`${
+                  c === activeCategory ? "bg-gray-200" : "bg-white"
+                } flex items-center justify-center gap-1 rounded-lg border border-gray-200 px-4 py-2 text-sm capitalize shadow hover:cursor-pointer hover:bg-gray-100`}
+                onClick={() => {
+                  setActiveCategory(c);
+                }}
+                key={c}
+              >
+                {c}{" "}
+                <span className="rounded-md bg-gray-200 p-1 px-2 text-xs font-medium text-gray-900">
+                  {categoryCounts[c] ?? 0}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="relative mt-1 min-w-[300px] rounded-md pt-4 shadow-sm">
+            <input
+              type="text"
+              name="search"
+              className="z-1 block w-full rounded-md border-gray-300 pr-10 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              placeholder="Search..."
+              defaultValue={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
             <div
-              className={`${
-                c === activeCategory ? "bg-gray-200" : "bg-white"
-              } flex items-center justify-center gap-1 rounded-lg border border-gray-200 px-4 py-2 text-sm capitalize shadow hover:cursor-pointer hover:bg-gray-100`}
-              onClick={() => {
-                setActiveCategory(c);
-              }}
-              key={c}
+              onClick={() => setSearchTerm("")}
+              className="z-2 absolute inset-y-0 top-4 right-0 flex items-center rounded-sm pr-2"
             >
-              {c}{" "}
-              <span className="rounded-md bg-gray-200 p-1 px-2 text-xs font-medium text-gray-900">
-                {categoryCounts[c] ?? 0}
-              </span>
+              <XIcon
+                className="h-6 w-6 rounded-full p-1 text-gray-400 hover:bg-gray-200 hover:text-gray-600"
+                aria-hidden="true"
+              />
             </div>
-          ))}
+          </div>
         </div>
         <table className="mt-4 min-w-full divide-y divide-gray-300">
           <thead className="bg-gray-50">
             <tr>
               <th
-                onClick={() => requestSort("item")}
+                onClick={() => requestSort("name")}
                 scope="col"
                 className="font-semibolds px-3 py-3.5 text-left text-sm text-gray-900"
               >
                 Item
+                {renderSortIndicator("name")}
               </th>
               <th
                 onClick={() => requestSort("quantity")}
@@ -165,6 +227,7 @@ export default function () {
                 className="font-semibolds px-3 py-3.5 text-left text-sm text-gray-900"
               >
                 Quantity
+                {renderSortIndicator("quantity")}
               </th>
               <th
                 onClick={() => requestSort("category")}
@@ -172,25 +235,31 @@ export default function () {
                 className="font-semibolds hidden px-3 py-3.5 text-left text-sm text-gray-900 sm:table-cell"
               >
                 Category
+                {renderSortIndicator("category")}
               </th>
               <th
-                onClick={() => requestSort("looted_by")}
+                onClick={() => requestSort("looted_by_name")}
                 scope="col"
                 className="font-semibolds hidden px-3 py-3.5 text-left text-sm text-gray-900 sm:table-cell"
               >
                 Looted by
+                {renderSortIndicator("looted_by_name")}
               </th>
               <th
+                onClick={() => requestSort("was_assigned")}
                 scope="col"
                 className="font-semibolds hidden px-3 py-3.5 text-left text-sm text-gray-900 lg:table-cell"
               >
                 Acquired via
+                {renderSortIndicator("was_assigned")}
               </th>
               <th
+                onClick={() => requestSort("looted_at")}
                 scope="col"
                 className="font-semibolds px-3 py-3.5 text-left text-sm text-gray-900"
               >
                 Looted at
+                {renderSortIndicator("looted_at")}
               </th>
               {["admin", "officer"].includes(user?.role ?? "guest") ? (
                 <th
@@ -203,14 +272,15 @@ export default function () {
             </tr>
           </thead>
           <tbody>
-            {lootData.map((lh, idx) => {
+            {sortedLootData.map((lh, idx) => {
               const date = new Date(
-                Date.parse(lh?.created_at as unknown as string)
+                Date.parse(lh?.looted_at as unknown as string)
               );
               return (
                 <tr
                   className={
-                    activeCategory !== (lh.item.category || "uncategorized")
+                    activeCategory !== (lh.category || "uncategorized") ||
+                    lh.hidden
                       ? "hidden"
                       : ""
                   }
@@ -219,9 +289,9 @@ export default function () {
                   <td className="flex items-center gap-4 whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">
                     <a
                       className="capitalize text-blue-500"
-                      href={`https://everquest.allakhazam.com/db/item.html?item=${lh.item.lucy_id};source=lucy`}
+                      href={`https://everquest.allakhazam.com/db/item.html?item=${lh.lucy_id};source=lucy`}
                     >
-                      {lh.item.name}
+                      {lh.name}
                     </a>
                   </td>
                   <td className="hidden whitespace-nowrap py-4 pr-3 text-sm font-medium capitalize text-gray-900 sm:table-cell">
@@ -229,15 +299,15 @@ export default function () {
                   </td>
                   <td className="hidden whitespace-nowrap py-4 pr-3 text-sm font-medium capitalize text-gray-900 sm:table-cell">
                     <span className="rounded-lg bg-gray-200 px-4 py-1">
-                      {lh.item.category || "uncategorized"}
+                      {lh.category || "uncategorized"}
                     </span>
                   </td>
                   <td className="hidden whitespace-nowrap py-4 pr-3 text-sm font-medium capitalize text-gray-900 sm:table-cell">
                     <Link
                       className="text-blue-500"
-                      to={`/players/${lh.player.id}`}
+                      to={`/players/${lh.looted_by_id}`}
                     >
-                      {lh.player.name}
+                      {lh.looted_by_name}
                     </Link>
                   </td>
                   <td className="hidden whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 lg:table-cell">
@@ -248,12 +318,20 @@ export default function () {
                   </td>
                   {["admin", "officer"].includes(user?.role ?? "guest") ? (
                     <td className="flex gap-1 whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">
-                      <Form method="post" onSubmit={(e) => removeItem(idx)}>
+                      <Form
+                        method="post"
+                        onSubmit={(e) => {
+                          if (lh.category === "bis") {
+                            return false;
+                          }
+                          removeItem(idx);
+                        }}
+                      >
                         <input type="hidden" name="category" value="bis" />
                         <input
                           type="hidden"
                           name="item_id"
-                          value={`${lh.item.id}`}
+                          value={`${lh.item_id}`}
                         />
                         <button
                           type="submit"
@@ -262,12 +340,20 @@ export default function () {
                           <ShieldCheckIcon />
                         </button>
                       </Form>
-                      <Form method="post">
+                      <Form
+                        method="post"
+                        onSubmit={(e) => {
+                          if (lh.category === "rolled") {
+                            return false;
+                          }
+                          removeItem(idx);
+                        }}
+                      >
                         <input type="hidden" name="category" value="rolled" />
                         <input
                           type="hidden"
                           name="item_id"
-                          value={`${lh.item.id}`}
+                          value={`${lh.item_id}`}
                         />
                         <button
                           type="submit"
@@ -276,12 +362,20 @@ export default function () {
                           <CubeIcon />
                         </button>
                       </Form>
-                      <Form method="post">
+                      <Form
+                        method="post"
+                        onSubmit={(e) => {
+                          if (lh.category === "trash") {
+                            return false;
+                          }
+                          removeItem(idx);
+                        }}
+                      >
                         <input type="hidden" name="category" value="trash" />
                         <input
                           type="hidden"
                           name="item_id"
-                          value={`${lh.item.id}`}
+                          value={`${lh.item_id}`}
                         />
                         <button
                           type="submit"
