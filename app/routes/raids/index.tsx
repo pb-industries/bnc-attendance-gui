@@ -21,7 +21,7 @@ export const loader: LoaderFunction = async ({ request }) => {
   const { raids, totalResults } = await getRaids({
     page,
     pageSize,
-    playerName: user?.player?.name,
+    playerId: user?.player_id,
   });
   return json<LoaderData>({
     raids,

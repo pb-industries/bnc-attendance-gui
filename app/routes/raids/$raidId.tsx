@@ -1,7 +1,11 @@
 import { Link, useLoaderData, Outlet, Form } from "@remix-run/react";
 import { json } from "@remix-run/node";
 import type { LoaderFunction, ActionFunction } from "@remix-run/node";
-import { createRaidTickRequest, getRaid } from "~/models/raid.server";
+import {
+  createRaidTickRequest,
+  getRaid,
+  getRaidTicks,
+} from "~/models/raid.server";
 import { ChevronRightIcon, CheckIcon, EyeIcon } from "@heroicons/react/outline";
 import { useEffect, useRef, useState } from "react";
 import HighchartsReact from "highcharts-react-official";
@@ -9,7 +13,7 @@ import Highcharts from "highcharts";
 import RequestTicksModal from "~/components/raids/requestTicksModal";
 import GenerateLottoRangeModal from "~/components/raids/generateLottoRangeModal";
 import { getMains, getMainsAtTick } from "~/models/roster.server";
-import { getRollRange, useOptionalUser } from "~/utils";
+import { formatDate, getRollRange, useOptionalUser } from "~/utils";
 import { requireUser } from "~/session.server";
 import { player } from "@prisma/client";
 
@@ -17,6 +21,7 @@ type LoaderData = {
   raid: Awaited<ReturnType<typeof getRaid>>;
   mains: Awaited<ReturnType<typeof getMains>> | player[];
   player: player;
+  raidTicks: Awaited<ReturnType<typeof getRaidTicks>>;
 };
 
 type HighchartsData = {
@@ -72,8 +77,10 @@ export const action: ActionFunction = async ({ request }) => {
 export const loader: LoaderFunction = async ({ request, params }) => {
   const user = await requireUser(request);
   const raid = await getRaid({ id: (params.raidId ?? 0) as unknown as number });
+  const raidTicks = await getRaidTicks(params.raidId ?? 0);
   return json<LoaderData>({
     raid,
+    raidTicks,
     mains: await getMains(),
     player: user?.player,
   });
@@ -84,7 +91,7 @@ export default function raidIdPage() {
   const [isCopied, setIsCopied] = useState(false);
   const [isDebugCopied, setIsDebugCopied] = useState(false);
   const refreshRef = useRef<HTMLButtonElement>();
-  const { raid, mains, player } = useLoaderData<LoaderData>();
+  const { raidTicks, raid, mains, player } = useLoaderData<LoaderData>();
   const [isRequestTicksModalOpen, setIsRequestTicksModalOpen] = useState(false);
   const [isGenerateLottoRangeModalOpen, setIsGenerateLottoRangeModalOpen] =
     useState(false);
@@ -129,13 +136,19 @@ export default function raidIdPage() {
     const seriesData: { name: string; data: number[] }[] = [];
     const categories: string[] = [];
     for (let i = 0; i <= raid.total_ticks; i++) {
+      let category = "";
       if (i === 0) {
-        categories.push("On time tick");
+        category = "On time tick";
       } else if (i === raid.total_ticks - 1) {
-        categories.push("Final tick");
+        category = "Final tick";
       } else {
-        categories.push(`Tick ${i}`);
+        category = `Tick ${i}`;
       }
+      category = `${category} - ${formatDate(
+        raidTicks[i] ?? new Date(),
+        true
+      )}`;
+      categories.push(category);
     }
 
     raid.attendees.forEach((attendeeData) => {

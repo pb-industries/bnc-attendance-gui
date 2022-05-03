@@ -42,7 +42,7 @@ export async function getRaid({ id }: Pick<raid, "id">) {
     let { player, raid_hour } = player_raid;
     // Get the optional name/id of the main
     const { name: mainName, id: mainId } = player
-      .player_alt_playerToplayer_alt_alt_id?.[0]
+      ?.player_alt_playerToplayer_alt_alt_id?.[0]
       ?.player_playerToplayer_alt_player_id ?? { name: null, id: null };
 
     player.player_alt_playerToplayer_alt_alt_id = [];
@@ -56,6 +56,7 @@ export async function getRaid({ id }: Pick<raid, "id">) {
       }
       attendees[playerId] = {
         ...player,
+        name: mainName ?? player.name,
         ticks: blankTicks,
       };
     }
@@ -92,6 +93,24 @@ export async function getRaid({ id }: Pick<raid, "id">) {
   };
 }
 
+export async function getRaidTicks(raidId: bigint) {
+  const ticks = (await prisma.$queryRawUnsafe(
+    `
+    SELECT
+      pr.raid_hour,
+        min(pr.created_at) AS created_at
+    FROM player_raid pr
+    WHERE pr.raid_id = ${BigInt(raidId).toString()}
+    GROUP BY pr.raid_hour
+  `
+  )) as { raid_hour: string; created_at: string }[];
+
+  return ticks.map((t) => new Date(t.created_at));
+}
+
+export const stringifyBigInt = (_: any, value: any) =>
+  typeof value === "bigint" ? value.toString() : value; // return everything else unchanged
+
 interface RaidWithTotals extends raid {
   total_ticks: number;
   total_mains: number;
@@ -101,11 +120,11 @@ interface RaidWithTotals extends raid {
 export async function getRaids({
   page = 0,
   pageSize = 10,
-  playerName,
+  playerId,
 }: {
   page?: number;
   pageSize?: number;
-  playerName?: string;
+  playerId?: bigint;
 }) {
   const raids = await prisma.$queryRawUnsafe<RaidWithTotals[]>(
     `
@@ -134,7 +153,7 @@ export async function getRaids({
       	FROM player_raid pr
       	LEFT JOIN player_alt pa ON pa.alt_id = pr.player_id
         LEFT JOIN player p ON pa.player_id = p.id OR pr.player_id = p.id
-      	WHERE p.name = '${playerName}'
+      	WHERE p.id = ${BigInt(playerId ?? 0).toString()}
       	GROUP BY pr.raid_id, main_id
     ) att ON att.raid_id = r.id
     GROUP BY r.id
