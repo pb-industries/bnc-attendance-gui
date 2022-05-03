@@ -8,6 +8,7 @@ interface ManageBoxModalProps {
   open: boolean;
   setOpen: (open: boolean) => void;
   player: player | null;
+  canSetRank: boolean;
 }
 
 interface ActionData {
@@ -20,7 +21,12 @@ interface ActionData {
   };
 }
 
-const AddBoxModal: FC<ManageBoxModalProps> = ({ player, open, setOpen }) => {
+const AddBoxModal: FC<ManageBoxModalProps> = ({
+  player,
+  open,
+  setOpen,
+  canSetRank,
+}) => {
   const actionData = useActionData<ActionData>();
   const cancelButtonRef = useRef<HTMLButtonElement>();
   const playerNameRef = useRef<HTMLInputElement>();
@@ -76,7 +82,7 @@ const AddBoxModal: FC<ManageBoxModalProps> = ({ player, open, setOpen }) => {
                       htmlFor="player.name"
                       className="block text-sm font-medium text-gray-700"
                     >
-                      Main name:
+                      Box name:
                     </label>
                     <div className="mt-1">
                       <input
@@ -176,6 +182,33 @@ const AddBoxModal: FC<ManageBoxModalProps> = ({ player, open, setOpen }) => {
                           {actionData.errors?.player?.class}
                         </div>
                       )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="player.class"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Rank:
+                    </label>
+                    <div className="mt-1">
+                      <select
+                        disabled={canSetRank ? false : true}
+                        id="player.rank"
+                        required
+                        autoFocus={true}
+                        name="player.rank"
+                        autoComplete="player.rank"
+                        defaultValue={player?.rank ?? "raider"}
+                        aria-describedby="player.class-error"
+                        className={`w-full rounded border border-gray-500 px-2 py-1 text-lg capitalize ${
+                          canSetRank ? "bg-white" : "bg-gray-100"
+                        }`}
+                      >
+                        <option className="capitalize">alt</option>
+                        <option className="capitalize">raider</option>
+                      </select>
                     </div>
                   </div>
 

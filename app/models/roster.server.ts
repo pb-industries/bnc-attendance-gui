@@ -70,7 +70,10 @@ export async function getPlayer(playerId?: bigint) {
     return null;
   }
 
-  return await prisma.player.findFirst({ where: { id: playerId } });
+  return await prisma.player.findFirst({
+    where: { id: playerId },
+    include: { player_alt_playerToplayer_alt_alt_id: true },
+  });
 }
 
 export async function deletePlayer(request: Request, playerId?: bigint) {
@@ -115,9 +118,10 @@ export async function getBoxes(playerId?: bigint) {
       id,
       name,
       level,
+      rank,
       class: className,
     } = pb.player_playerToplayer_alt_alt_id;
-    return { id, name, level, class: className };
+    return { id, name, rank, level, class: className };
   });
 
   return boxes;
@@ -158,6 +162,7 @@ export async function createBox(
         name: player.name?.trim().toLowerCase(),
         class: player.class?.trim().toLowerCase(),
         level: player.level,
+        rank: player.rank,
       },
     });
     boxId = addedPlayer.id;
@@ -166,7 +171,12 @@ export async function createBox(
     existingPlayer.level = player.level;
     existingPlayer.class = player.class;
     await prisma.player.update({
-      data: { class: player.class, level: player.level, name: player.name },
+      data: {
+        class: player.class,
+        level: player.level,
+        name: player.name,
+        rank: player.rank,
+      },
       where: { id: existingPlayer.id },
     });
     boxId = existingPlayer.id;

@@ -49,7 +49,9 @@ export async function getUserByPlayerId(playerId: player["id"]) {
 
   return prisma.user.findFirst({
     where: { player: { id: playerId } },
-    include: { player: true },
+    include: {
+      player: { include: { player_alt_playerToplayer_alt_alt_id: true } },
+    },
   });
 }
 

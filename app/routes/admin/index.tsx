@@ -37,7 +37,7 @@ export const loader: LoaderFunction = async ({ request }) => {
 };
 
 export const action: ActionFunction = async ({ request, params }) => {
-  const user = requireUser(request);
+  const user = await requireUser(request);
   const formData = await request.formData();
 
   const lastWinModifier = parseFloat(
@@ -46,7 +46,7 @@ export const action: ActionFunction = async ({ request, params }) => {
   const boxModifier = parseFloat(`${formData.get("box_modifier") ?? 0}`);
   const guildId = BigInt(`${formData.get("guild_id") ?? 0}`);
 
-  if (!user || !guildId) {
+  if (!user || !guildId || user?.role !== "admin") {
     return null;
   }
 
@@ -85,9 +85,12 @@ export default function () {
         </label>
         <div className="relative mt-1 rounded-md shadow-sm">
           <input
+            readOnly={user?.role !== "admin"}
             type="text"
             name="last_win_modifier"
-            className="block w-full rounded-md border-gray-300 pl-4 pr-12 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            className={`block w-full rounded-md border-gray-300 pl-4 pr-12 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
+              user?.role !== "admin" ? "bg-gray-100" : "bg-white"
+            }`}
             placeholder="0.00"
             aria-describedby="last_win_modifier-percent"
             defaultValue={guild?.last_win_modifier * 100}
@@ -106,9 +109,12 @@ export default function () {
         </label>
         <div className="relative mt-1 rounded-md shadow-sm">
           <input
+            readOnly={user?.role !== "admin"}
             type="text"
             name="box_modifier"
-            className="block w-full rounded-md border-gray-300 pl-4 pr-12 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            className={`block w-full rounded-md border-gray-300 pl-4 pr-12 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
+              user?.role !== "admin" ? "bg-gray-100" : "bg-white"
+            }`}
             placeholder="0.00"
             aria-describedby="box_modifier-percent"
             defaultValue={guild?.box_modifier * 100}
@@ -120,8 +126,13 @@ export default function () {
       </div>
       <button
         type="submit"
+        disabled={user?.role !== "admin"}
         onClick={(e) => setSaving(true)}
-        className="fit-content inline-flex w-full justify-center self-end rounded-md border border-transparent bg-indigo-500 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 sm:w-auto sm:text-sm"
+        className={`${
+          user?.role !== "admin"
+            ? "bg-gray-500 hover:bg-gray-600"
+            : "bg-indigo-500 hover:bg-indigo-600"
+        } fit-content inline-flex w-full justify-center self-end rounded-md border border-transparent px-4 py-2 text-base font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 sm:w-auto sm:text-sm`}
       >
         {saving ? (
           <div className="flex items-center justify-center px-12">

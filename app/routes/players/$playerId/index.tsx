@@ -9,8 +9,8 @@ import {
   getBoxes,
   getPlayer,
 } from "~/models/roster.server";
-import { getUserByPlayerId } from "~/models/user.server";
-import { player } from "@prisma/client";
+import { getUserById, getUserByPlayerId } from "~/models/user.server";
+import { player, user } from "@prisma/client";
 import HandleDeleteModal from "../../../components/players/deleteModal";
 import ManageBoxModal from "../../../components/players/manageBoxModal";
 import { useEffect, useState } from "react";
@@ -35,11 +35,13 @@ interface ActionData {
 const handleBoxEditAction = async (
   mainId: bigint,
   formData: FormData,
-  method: string
+  method: string,
+  user: user
 ) => {
   const playerId = formData.get("player.id")?.toString() ?? null;
   const playerName = formData.get("player.name")?.toString() ?? null;
   const playerClass = formData.get("player.class")?.toString() ?? null;
+  const playerRank = formData.get("player.rank")?.toString() ?? null;
   const playerLevel =
     parseInt(formData.get("player.level")?.toString() ?? "0") ?? 65;
 
@@ -79,12 +81,19 @@ const handleBoxEditAction = async (
     level: playerLevel as unknown as bigint,
   };
 
+  if (["admin", "officer"].includes(user?.role ?? "guest")) {
+    const rank = ["alt", "raider"].includes(playerRank ?? "")
+      ? playerRank?.trim().toLowerCase()
+      : "raider";
+    player.rank = rank;
+  }
   // @ts-ignore
   return await createBox(player, mainId, playerId);
 };
 
 export const action: ActionFunction = async ({ request, params }) => {
   const formData = await request.formData();
+  const user = await requireUser(request);
   const method = request.method;
 
   if (method.toUpperCase() === "DELETE") {
@@ -96,7 +105,7 @@ export const action: ActionFunction = async ({ request, params }) => {
     await deletePlayer(request, BigInt(playerId));
   } else if (["PUT", "POST"].includes(method.toUpperCase())) {
     const mainId = params?.playerId ?? 0;
-    await handleBoxEditAction(BigInt(mainId), formData, method);
+    await handleBoxEditAction(BigInt(mainId), formData, method, user);
   }
 
   return redirect(request.headers.get("Referer") ?? "/roster");
@@ -105,7 +114,7 @@ export const action: ActionFunction = async ({ request, params }) => {
 export const loader: LoaderFunction = async ({ params }) => {
   const playerId = params.playerId ?? 0;
   const user = await getUserByPlayerId(BigInt(playerId));
-  let player: player | null = null;
+  let player: Awaited<ReturnType<typeof getPlayer>> | null = null;
   if (!user?.player) {
     player = await getPlayer(BigInt(playerId));
   } else {
@@ -113,6 +122,11 @@ export const loader: LoaderFunction = async ({ params }) => {
   }
   if (!player) {
     return redirect("/");
+  }
+  if (player.player_alt_playerToplayer_alt_alt_id.length > 0) {
+    return redirect(
+      `/players/${player.player_alt_playerToplayer_alt_alt_id[0].player_id}`
+    );
   }
   const boxes = await getBoxes(BigInt(playerId));
   return json<LoaderData>({ user, player, boxes });
@@ -271,6 +285,15 @@ export default function RaidIndexPage() {
                     <span className="inline-block flex-shrink-0 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
                       {box?.class}
                     </span>
+                    <span
+                      className={`inline-block flex-shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
+                        box?.rank === "raider"
+                          ? "bg-purple-100 text-purple-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {box?.rank ?? "alt"}
+                    </span>
                   </div>
                   <p className="mt-1 truncate text-sm text-gray-500">
                     Level {box?.level}
@@ -345,6 +368,7 @@ export default function RaidIndexPage() {
         open={isManagePlayerModalOpen}
         player={editPlayer}
         setOpen={setIsManagePlayerModalOpen}
+        canSetRank={["admin", "officer"].includes(user?.role ?? "guest")}
       />
     </div>
   );
