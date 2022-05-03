@@ -73,9 +73,9 @@ export default function IndexRoute() {
     filteredMains.forEach((main) => {
       categories.push(main.name);
       attendance.attendance_30.data.push(main.attendance_30 ?? 0);
-      attendance.attendance_60.data.push(main.attendance_30 ?? 0);
-      attendance.attendance_90.data.push(main.attendance_30 ?? 0);
-      attendance.attendance_life.data.push(main.attendance_30 ?? 0);
+      attendance.attendance_60.data.push(main.attendance_60 ?? 0);
+      attendance.attendance_90.data.push(main.attendance_90 ?? 0);
+      attendance.attendance_life.data.push(main.attendance_life ?? 0);
     });
 
     const xAxis: { categories: string[]; crosshair: boolean } = {

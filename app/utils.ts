@@ -224,7 +224,7 @@ export function getRollRange(
         lower: total + 1,
         upper:
           total +
-          (parseInt(`${p?.total_tickets ?? p?.attendance_30 ?? 0}`, 10) + 1),
+          (parseInt(`${p?.total_tickets ?? p?.attendance_60 ?? 0}`, 10) + 1),
       };
 
       total = res.upper;
@@ -238,7 +238,7 @@ export function getRollRange(
         const boxes =
           r?.p?.player_alt_playerToplayer_alt_player_id?.length ?? 0;
         const boxString = boxes > 0 ? ` ${boxes + 1}-box |` : "";
-        return `${r.p.name} (${r.p.attendance_30}% |${boxString} ${r.p.ticks_since_last_win} ticks since last BiS) ${r.lower}-${r.upper}`;
+        return `${r.p.name} (${r.p.attendance_60}% |${boxString} ${r.p.ticks_since_last_win} ticks since last BiS) ${r.lower}-${r.upper}`;
       })
       .join(" | ");
   }
