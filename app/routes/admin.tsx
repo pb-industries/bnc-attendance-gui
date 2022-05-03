@@ -1,4 +1,4 @@
-import { Link, useLoaderData, Form } from "@remix-run/react";
+import { Link, useLoaderData, Form, Outlet } from "@remix-run/react";
 import { json, redirect } from "@remix-run/node";
 import type { LoaderFunction, ActionFunction, json } from "@remix-run/node";
 import { requireUser } from "~/session.server";
@@ -219,6 +219,9 @@ export default function RaidIndexPage() {
             </li>
           </ol>
         </nav>
+      </div>
+      <div>
+        <Outlet />
       </div>
       <div className="grid grid-cols-12 gap-4 py-4">
         <div className="col-span-12 shadow lg:col-span-6 xl:col-span-4">

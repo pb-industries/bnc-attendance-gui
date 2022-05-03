@@ -11,7 +11,7 @@ import { getLootForRaid } from "~/models/loot.server";
 import { formatDate, useOptionalUser } from "~/utils";
 import { CubeIcon, ShieldCheckIcon, TrashIcon } from "@heroicons/react/outline";
 import { prisma } from "~/db.server";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type LoaderData = { loot: Awaited<ReturnType<typeof getLootForRaid>> };
 
@@ -63,9 +63,22 @@ export default function () {
     [key in Category]: number;
   }>({ bis: 0, rolled: 0, trash: 0, uncategorized: 0 });
   const { loot: lootRaw } = useLoaderData<LoaderData>();
-  const [loot, setLoot] = useState(lootRaw);
+  const [lootData, setSortedLootData] = useState(lootRaw);
   const [activeCategory, setActiveCategory] = useState<Category>("bis");
-  useEffect(() => {
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: "ascending" | "descending";
+  } | null>({ key: "name", direction: "ascending" });
+
+  const requestSort = (key: string) => {
+    let direction: "ascending" | "descending" = "ascending";
+    if (sortConfig?.key === key && sortConfig?.direction === "ascending") {
+      direction = "descending";
+    }
+    setSortConfig({ key, direction });
+  };
+
+  useMemo(() => {
     if (!lootRaw) {
       return;
     }
@@ -83,12 +96,25 @@ export default function () {
     });
 
     setCategoryCounts(counts);
-    setLoot(lootRaw);
-  }, [lootRaw]);
+    setSortedLootData(lootRaw);
+    let sortedLootData = [...lootData];
+    if (sortConfig?.key && sortConfig?.direction) {
+      sortedLootData.sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+          return sortConfig.direction === "ascending" ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+          return sortConfig.direction === "ascending" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    setSortedLootData(sortedLootData);
+  }, [lootRaw, sortConfig]);
   const removeItem = (idx: number) => {
-    const newLoot = [...loot];
+    const newLoot = [...lootData];
     newLoot.splice(idx, 1);
-    setLoot(newLoot);
+    setSortedLootData(newLoot);
   };
 
   useEffect(() => {
@@ -127,24 +153,28 @@ export default function () {
           <thead className="bg-gray-50">
             <tr>
               <th
+                onClick={() => requestSort("item")}
                 scope="col"
                 className="font-semibolds px-3 py-3.5 text-left text-sm text-gray-900"
               >
                 Item
               </th>
               <th
+                onClick={() => requestSort("quantity")}
                 scope="col"
                 className="font-semibolds px-3 py-3.5 text-left text-sm text-gray-900"
               >
                 Quantity
               </th>
               <th
+                onClick={() => requestSort("category")}
                 scope="col"
                 className="font-semibolds hidden px-3 py-3.5 text-left text-sm text-gray-900 sm:table-cell"
               >
                 Category
               </th>
               <th
+                onClick={() => requestSort("looted_by")}
                 scope="col"
                 className="font-semibolds hidden px-3 py-3.5 text-left text-sm text-gray-900 sm:table-cell"
               >
@@ -173,7 +203,7 @@ export default function () {
             </tr>
           </thead>
           <tbody>
-            {loot.map((lh, idx) => {
+            {lootData.map((lh, idx) => {
               const date = new Date(
                 Date.parse(lh?.created_at as unknown as string)
               );
