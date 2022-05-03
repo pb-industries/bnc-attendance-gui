@@ -95,31 +95,54 @@ export async function getRaid({ id }: Pick<raid, "id">) {
 interface RaidWithTotals extends raid {
   total_ticks: number;
   total_mains: number;
+  attended_ticks: number;
 }
 
 export async function getRaids({
   page = 0,
   pageSize = 10,
+  playerName,
 }: {
   page?: number;
   pageSize?: number;
+  playerName?: string;
 }) {
-  const raids = await prisma.$queryRaw<RaidWithTotals[]>`
+  const raids = await prisma.$queryRawUnsafe<RaidWithTotals[]>(
+    `
     SELECT
       r.id::STRING,
       r.name,
       r.created_at,
+      greatest(0, max(att.attended_ticks)) as attended_ticks,
       COUNT(DISTINCT pr.raid_hour) AS total_ticks,
-      COUNT(DISTINCT (IF(pr.player_id IS NOT NULL AND pa.player_id <> pr.player_id, pa.player_id, pr.player_id))) AS total_mains
+      greatest(0, max(mi.total_mains)) AS total_mains
     FROM raid r
     LEFT JOIN player_raid pr ON pr.raid_id = r.id
-    LEFT JOIN player_alt pa ON pa.alt_id = pr.player_id
-    LEFT JOIN player p on pr.player_id = p.id
+    INNER JOIN (
+    	SELECT
+      		pr.raid_id,
+      		COUNT(DISTINCT (IF(pr.player_id IS NOT NULL AND pa.player_id <> pr.player_id, pa.player_id, pr.player_id))) AS total_mains
+     	FROM player_raid pr
+      	LEFT JOIN player_alt pa ON pa.alt_id = pr.player_id
+      	GROUP BY pr.raid_id
+    ) AS mi ON mi.raid_id = r.id
+    LEFT JOIN (
+    	SELECT
+            pr.raid_id,
+      		if (pa.alt_id = pr.player_id, pa.player_id, pr.player_id) AS main_id,
+      		COUNT(DISTINCT pr.raid_hour) AS attended_ticks
+      	FROM player_raid pr
+      	LEFT JOIN player_alt pa ON pa.alt_id = pr.player_id
+        LEFT JOIN player p ON pa.player_id = p.id OR pr.player_id = p.id
+      	WHERE p.name = '${playerName}'
+      	GROUP BY pr.raid_id, main_id
+    ) att ON att.raid_id = r.id
     GROUP BY r.id
     ORDER BY r.created_at DESC
     LIMIT ${parseInt(`${pageSize}`)}
     OFFSET ${parseInt(`${page * pageSize}`)}
-  `;
+  `
+  );
 
   return { raids, totalResults: await prisma.raid.count() };
 }

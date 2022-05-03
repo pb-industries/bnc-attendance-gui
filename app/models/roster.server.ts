@@ -98,6 +98,8 @@ export async function deletePlayer(request: Request, playerId?: bigint) {
     return await prisma.player.delete({ where: { id: BigInt(playerId) } });
   }
 
+  updateTotalBoxCount();
+
   return null;
 }
 
@@ -201,5 +203,21 @@ export async function createBox(
     console.info("box already belongs to this user");
   }
 
+  updateTotalBoxCount();
+
   return existingPlayer;
+}
+
+export async function updateTotalBoxCount() {
+  await prisma.$queryRaw`
+    update player AS pr
+    set total_boxes = tb.total_boxes
+    from (
+      select pl.id, count(pa.player_id = pl.id) AS total_boxes
+      from player AS pl
+      inner join player_alt pa on pa.player_id = pl.id
+      group by pl.id
+    ) AS tb
+    where pr.id = tb.id
+  `;
 }

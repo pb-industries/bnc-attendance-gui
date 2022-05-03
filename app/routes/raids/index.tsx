@@ -3,6 +3,7 @@ import { json } from "@remix-run/node";
 import type { LoaderFunction } from "@remix-run/node";
 import { getRaids } from "~/models/raid.server";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/outline";
+import { getUser } from "~/session.server";
 
 type LoaderData = {
   raids: Awaited<ReturnType<typeof getRaids>>;
@@ -12,6 +13,7 @@ type LoaderData = {
 };
 
 export const loader: LoaderFunction = async ({ request }) => {
+  const user = await getUser(request);
   const url = new URL(request.url);
   const page = parseInt(url?.searchParams.get("page") ?? "0");
   const pageSize = parseInt(url.searchParams.get("pageSize") ?? "10");
@@ -19,13 +21,13 @@ export const loader: LoaderFunction = async ({ request }) => {
   const { raids, totalResults } = await getRaids({
     page,
     pageSize,
+    playerName: user?.player?.name,
   });
   return json<LoaderData>({
     raids,
     page,
     pageSize,
     totalResults,
-    attendedTicks,
   });
 };
 
@@ -112,7 +114,7 @@ export default function RaidIndexPage() {
                     </Link>
                   </td>
                   <td className="hidden whitespace-nowrap py-4 pr-3 text-sm font-medium text-gray-900 sm:table-cell">
-                    {}/{raid.total_ticks}
+                    {raid.attended_ticks}/{raid.total_ticks}
                   </td>
                   <td className="hidden whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 lg:table-cell">
                     {raid.total_mains}
