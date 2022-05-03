@@ -16,7 +16,8 @@ import {
   XIcon,
 } from "@heroicons/react/outline";
 import { prisma } from "~/db.server";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { DebounceInput } from "react-debounce-input";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type LoaderData = { loot: Awaited<ReturnType<typeof getLootForRaid>> };
 
@@ -63,11 +64,12 @@ export default function () {
     "trash",
     "uncategorized",
   ]);
-  const [searchTerm, setSearchTerm] = useState("");
   const [mounted, setMounted] = useState(false);
   const [categoryCounts, setCategoryCounts] = useState<{
     [key in Category]: number;
   }>({ bis: 0, rolled: 0, trash: 0, uncategorized: 0 });
+  const inputRef = useRef(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const { loot: lootRaw } = useLoaderData<LoaderData>();
   const [sortedLootData, setSortedLootData] = useState<any[]>([]);
   const [activeCategory, setActiveCategory] = useState<Category>("bis");
@@ -90,19 +92,39 @@ export default function () {
     }
   };
 
-  useMemo(() => {
+  const showAllData = () => {
+    return setSortedLootData(
+      sortedLootData.map((s) => {
+        return { ...s, hidden: false };
+      })
+    );
+  };
+
+  const filterLoot = (term: string) => {
+    if (!term) {
+      return showAllData();
+    }
+    const filters = term.split("+").map((term) => term.trim().toLowerCase());
+
     const filteredData = sortedLootData.map((item) => {
+      const matches = [
+        item?.name?.toLowerCase().trim(),
+        item?.looted_by_name?.toLowerCase().trim(),
+      ].filter((t) => !!t);
+      if (matches.length === 0) {
+        return showAllData();
+      }
       return {
         ...item,
-        hidden: !(
-          item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.looted_by_name.toLowerCase().includes(searchTerm.toLowerCase())
+        hidden: !filters.find((filter) =>
+          matches.some((match) => match?.includes(filter))
         ),
       };
     });
 
+    console.log(filteredData);
     setSortedLootData(filteredData);
-  }, [searchTerm]);
+  };
 
   useMemo(() => {
     if (!lootRaw) {
@@ -191,16 +213,24 @@ export default function () {
             ))}
           </div>
           <div className="relative mt-1 min-w-[300px] rounded-md pt-4 shadow-sm">
-            <input
+            <DebounceInput
               type="text"
               name="search"
               className="z-1 block w-full rounded-md border-gray-300 pr-10 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
               placeholder="Search..."
-              defaultValue={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              ref={inputRef}
+              debounceTimeout={200}
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                filterLoot(e.target.value);
+              }}
             />
             <div
-              onClick={() => setSearchTerm("")}
+              onClick={() => {
+                setSearchTerm("");
+                filterLoot("");
+              }}
               className="z-2 absolute inset-y-0 top-4 right-0 flex items-center rounded-sm pr-2"
             >
               <XIcon
@@ -279,8 +309,8 @@ export default function () {
               return (
                 <tr
                   className={
-                    activeCategory !== (lh.category || "uncategorized") ||
-                    lh.hidden
+                    activeCategory !== (lh?.category || "uncategorized") ||
+                    lh?.hidden
                       ? "hidden"
                       : ""
                   }
@@ -291,27 +321,27 @@ export default function () {
                       className="capitalize text-blue-500"
                       href={`https://everquest.allakhazam.com/db/item.html?item=${lh.lucy_id};source=lucy`}
                     >
-                      {lh.name}
+                      {lh?.name}
                     </a>
                   </td>
                   <td className="hidden whitespace-nowrap py-4 pr-3 text-sm font-medium capitalize text-gray-900 sm:table-cell">
-                    {lh.quantity}
+                    {lh?.quantity}
                   </td>
                   <td className="hidden whitespace-nowrap py-4 pr-3 text-sm font-medium capitalize text-gray-900 sm:table-cell">
                     <span className="rounded-lg bg-gray-200 px-4 py-1">
-                      {lh.category || "uncategorized"}
+                      {lh?.category || "uncategorized"}
                     </span>
                   </td>
                   <td className="hidden whitespace-nowrap py-4 pr-3 text-sm font-medium capitalize text-gray-900 sm:table-cell">
                     <Link
                       className="text-blue-500"
-                      to={`/players/${lh.looted_by_id}`}
+                      to={`/players/${lh?.looted_by_id}`}
                     >
-                      {lh.looted_by_name}
+                      {lh?.looted_by_name}
                     </Link>
                   </td>
                   <td className="hidden whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 lg:table-cell">
-                    {lh.was_assigned ? "Assigned" : "Rolled for"}
+                    {lh?.was_assigned ? "Assigned" : "Rolled for"}
                   </td>
                   <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 ">
                     {formatDate(date, true)}
