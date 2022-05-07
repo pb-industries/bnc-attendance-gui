@@ -263,16 +263,21 @@ export default function raidIdPage() {
               </div>
             ) : null}
           </div>
-          <div className="mt-1 flex flex-col sm:mt-0 sm:flex-row sm:flex-wrap sm:space-x-6">
-            <div className="mt-2 flex items-center text-sm text-gray-500">
+          <div className="flex flex-col items-center sm:mt-2 sm:flex-row sm:flex-wrap sm:space-x-6">
+            <div className="flex items-center text-sm text-gray-500">
               Total ticks: {raid.total_ticks}
             </div>
-            <div className="mt-2 flex items-center text-sm text-gray-500">
+            <div className="flex items-center text-sm text-gray-500">
               Occurred on:{" "}
               {new Date(Date.parse(`${raid.created_at}`))
                 .toISOString()
                 .substring(0, 10)}
             </div>
+            {raid?.is_official ? null : (
+              <span className="rounded-lg bg-red-100 px-3 py-1 text-sm font-medium text-red-900">
+                Unofficial
+              </span>
+            )}
           </div>
         </div>
         {user ? (

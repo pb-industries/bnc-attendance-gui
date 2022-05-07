@@ -132,6 +132,7 @@ export async function getRaids({
       r.id::STRING,
       r.name,
       r.created_at,
+      r.is_official,
       greatest(0, max(att.attended_ticks)) as attended_ticks,
       COUNT(DISTINCT pr.raid_hour) AS total_ticks,
       greatest(0, max(mi.total_mains)) AS total_mains

@@ -109,8 +109,16 @@ export default function RaidIndexPage() {
               return (
                 <tr>
                   <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 ">
-                    <Link className="text-blue-500" to={`/raids/${raid.id}`}>
+                    <Link
+                      className="flex items-center gap-2 text-blue-500"
+                      to={`/raids/${raid.id}`}
+                    >
                       {raid.name}
+                      {raid.is_official ? null : (
+                        <span className="rounded-lg bg-red-100 px-3 py-1 text-xs font-medium text-red-900">
+                          Unofficial
+                        </span>
+                      )}
                     </Link>
                   </td>
                   <td className="hidden whitespace-nowrap py-4 pr-3 text-sm font-medium text-gray-900 sm:table-cell">
