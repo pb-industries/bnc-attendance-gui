@@ -194,7 +194,7 @@ const AddBoxModal: FC<ManageBoxModalProps> = ({
                     </label>
                     <div className="mt-1">
                       <select
-                        disabled={!canSetRank ? false : true}
+                        disabled={canSetRank ? false : true}
                         id="player.rank"
                         required
                         autoFocus={true}
