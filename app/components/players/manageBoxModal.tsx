@@ -203,7 +203,7 @@ const AddBoxModal: FC<ManageBoxModalProps> = ({
                         defaultValue={player?.rank ?? "raider"}
                         aria-describedby="player.class-error"
                         className={`w-full rounded border border-gray-500 px-2 py-1 text-lg capitalize ${
-                          !canSetRank ? "bg-white" : "bg-gray-100"
+                          canSetRank ? "bg-white" : "bg-gray-100"
                         }`}
                       >
                         <option className="capitalize">alt</option>
@@ -214,7 +214,7 @@ const AddBoxModal: FC<ManageBoxModalProps> = ({
 
                   <input
                     className="hidden"
-                    type="hideen"
+                    type="hidden"
                     name="player.id"
                     value={`${player?.id ?? 0}`}
                   />
