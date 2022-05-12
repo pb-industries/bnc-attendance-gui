@@ -232,6 +232,8 @@ export default function () {
   useMemo(() => {
     if (searchTerm) {
       filterLoot(searchTerm);
+    } else if (sortedLootData.length > 0) {
+      showAllData();
     }
   }, [filterSetTerm]);
 
@@ -267,16 +269,9 @@ export default function () {
             type: "pie",
             events: {
               drilldown: function (e) {
-                console.log(e.point.name);
-                setSearchTerm(e.point.name);
+                const term = e.seriesOptions.data.map((p) => p[0]).join("+");
+                setSearchTerm(term);
                 setFilterSetTerm(new Date());
-              },
-              drillup: function (e) {
-                setSearchTerm("");
-                setFilterSetTerm(new Date());
-              },
-              click: function (e) {
-                console.log(e);
               },
             },
           },
@@ -315,10 +310,14 @@ export default function () {
           ],
           drilldown: {
             series: lootDistribution.map((p) => {
+              const values = Object.values(p.drilldown);
+              const boxWins = values.reduce((sum, value) => {
+                return sum + value[1];
+              }, 0);
               return {
                 name: p.name,
                 id: p.name,
-                data: Object.values(p.drilldown),
+                data: [[p.name, p.total_items - boxWins], ...values],
               };
             }),
           },
