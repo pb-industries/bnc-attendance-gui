@@ -9,11 +9,16 @@ export type LootLine = {
 };
 
 export async function getLatestRaidId() {
-  const raid = await prisma.raid.findFirst({
-    orderBy: { created_at: "desc" },
+  const history = await prisma.loot_history.findFirst({
+    where: {
+      raid_id: {
+        not: null,
+      },
+    },
+    orderBy: { raid: { created_at: "desc" } },
   });
 
-  return raid?.id;
+  return history?.raid_id;
 }
 
 export async function getLootForRaid(raidIds?: bigint[], playerId?: bigint) {

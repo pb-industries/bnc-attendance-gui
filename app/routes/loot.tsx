@@ -126,12 +126,13 @@ export default function () {
   }, [lootRaw]);
 
   return (
-    <div>
+    <div className="w-full">
       <HighchartsReact
         highcharts={Highcharts}
         options={{
           chart: {
             type: "pie",
+            height: "500px",
             events: {
               drilldown: function (e) {
                 const term = e.seriesOptions.data.map((p) => p[0]).join("+");
