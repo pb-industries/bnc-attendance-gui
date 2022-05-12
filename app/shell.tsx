@@ -88,6 +88,12 @@ export default function Shell() {
                         >
                           Roster
                         </Link>
+                        <Link
+                          to="/loot"
+                          className="rounded-md px-3 py-2 text-sm font-medium text-indigo-200 hover:text-white"
+                        >
+                          Loot
+                        </Link>
                         {user ? null : (
                           <>
                             <Link
@@ -199,6 +205,13 @@ export default function Shell() {
                     className="mt-1 block rounded-md px-3 py-2 text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-indigo-100"
                   >
                     Roster
+                  </Disclosure.Button>
+                  <Disclosure.Button
+                    as="a"
+                    href="/loot"
+                    className="mt-1 block rounded-md px-3 py-2 text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-indigo-100"
+                  >
+                    Loot
                   </Disclosure.Button>
                 </div>
                 <div className="border-t border-indigo-800 pt-4 pb-3">

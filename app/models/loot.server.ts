@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "~/db.server";
 
 export type LootLine = {
@@ -7,21 +8,35 @@ export type LootLine = {
   item_id: string;
 };
 
-export async function getLootForRaid(raidId?: bigint) {
+export async function getLatestRaidId() {
   const raid = await prisma.raid.findFirst({
-    where: { id: raidId },
+    orderBy: { created_at: "desc" },
   });
 
-  if (!raid) {
-    return [];
+  return raid?.id;
+}
+
+export async function getLootForRaid(raidIds?: bigint[], playerId?: bigint) {
+  let where: Prisma.loot_historyWhereInput[] = [];
+
+  if (playerId) {
+    where.push({ looted_by_id: playerId });
+  }
+
+  if (raidIds?.length ?? 0 > 0) {
+    where.push({ raid_id: { in: raidIds } });
   }
 
   const loot = await prisma.loot_history.findMany({
-    where: { raid_id: raid.id },
+    where: {
+      AND: [...where],
+    },
     include: {
       player: {
         include: {
-          player_alt_playerToplayer_alt_player_id: true,
+          player_alt_playerToplayer_alt_alt_id: {
+            include: { player_playerToplayer_alt_player_id: true },
+          },
         },
       },
       item: true,
