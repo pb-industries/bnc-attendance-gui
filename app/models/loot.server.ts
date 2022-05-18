@@ -7,6 +7,7 @@ export type LootLine = {
   player_id: string;
   item_id: string;
 };
+type Category = "bis" | "rolled" | "trash" | "uncategorized";
 
 export async function getLatestRaidId() {
   const history = await prisma.loot_history.findFirst({
@@ -21,8 +22,18 @@ export async function getLatestRaidId() {
   return history?.raid_id;
 }
 
-export async function getLootForRaid(raidIds?: bigint[], playerId?: bigint) {
+export async function getLootForRaid(
+  raidIds?: bigint[],
+  playerId?: bigint,
+  categories?: Category[]
+) {
   let where: Prisma.loot_historyWhereInput[] = [];
+
+  if (!categories) {
+    categories = ["bis"];
+  }
+
+  where.push({ item: { category: { in: categories } } });
 
   if (playerId) {
     where.push({ looted_by_id: playerId });

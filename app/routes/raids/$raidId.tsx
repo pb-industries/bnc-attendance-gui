@@ -158,9 +158,7 @@ export default function raidIdPage() {
       };
       Object.keys(attendeeData.ticks).forEach((tick) => {
         const tickData = attendeeData.ticks[tick];
-        if (tickData.length > 0) {
-          seriesDatum.data.push(tickData.length);
-        }
+        seriesDatum.data.push(tickData.length);
       });
       seriesData.push(seriesDatum);
     });
@@ -349,7 +347,9 @@ export default function raidIdPage() {
                 dataLabels: {
                   enabled: true,
                   formatter: function () {
-                    return `<span class="capitalize">${this.series.name}</span>`;
+                    if (this.point.y > 0) {
+                      return `<span class="capitalize">${this.series.name}</span>`;
+                    }
                   },
                 },
               },

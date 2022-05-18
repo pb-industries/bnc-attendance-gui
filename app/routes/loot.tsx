@@ -17,14 +17,24 @@ import LootTable from "~/components/lootTable";
 
 type LoaderData = { loot: Awaited<ReturnType<typeof getLootForRaid>> };
 
-export const loader: LoaderFunction = async ({ request, params }) => {
+export const loader: LoaderFunction = async ({ request }) => {
+  const { searchParams } = new URL(request.url);
   const userId = await getUserId(request);
   if (!userId) {
     return redirect("/");
   }
 
+  console.log(searchParams);
+  const rawCategories = searchParams.get("categories");
+  const categories = (
+    rawCategories ? rawCategories.replace(" ", "").split(",") : ["bis"]
+  ) as Category[];
   const raidId = await getLatestRaidId();
-  const loot = await getLootForRaid(raidId ? [raidId] : []);
+  const loot = await getLootForRaid(
+    raidId ? [raidId] : [],
+    undefined,
+    categories
+  );
 
   return json<LoaderData>({ loot });
 };
