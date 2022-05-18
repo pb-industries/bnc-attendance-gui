@@ -17,9 +17,15 @@ type LoaderData = {
   lootRaw: Awaited<ReturnType<typeof getLootForRaid>>;
   user: user;
   filterTerm: string;
+  hideEmpty?: boolean;
 };
 
-const LootTable: FC<LoaderData> = ({ user, lootRaw, filterTerm }) => {
+const LootTable: FC<LoaderData> = ({
+  user,
+  lootRaw,
+  filterTerm,
+  hideEmpty,
+}) => {
   const [categories] = useState<Category[]>([
     "bis",
     "rolled",
@@ -155,22 +161,24 @@ const LootTable: FC<LoaderData> = ({ user, lootRaw, filterTerm }) => {
         <h1 className="text-2xl font-medium">Items looted</h1>
         <div className="flex justify-between">
           <div className="flex gap-2 pt-4">
-            {categories.map((c) => (
-              <div
-                className={`${
-                  c === activeCategory ? "bg-gray-200" : "bg-white"
-                } flex items-center justify-center gap-1 rounded-lg border border-gray-200 px-4 py-2 text-sm capitalize shadow hover:cursor-pointer hover:bg-gray-100`}
-                onClick={() => {
-                  setActiveCategory(c);
-                }}
-                key={c}
-              >
-                {c}{" "}
-                <span className="rounded-md bg-gray-200 p-1 px-2 text-xs font-medium text-gray-900">
-                  {categoryCounts[c] ?? 0}
-                </span>
-              </div>
-            ))}
+            {categories
+              .filter((c) => (hideEmpty ? categoryCounts[c] > 0 : true))
+              .map((c) => (
+                <div
+                  className={`${
+                    c === activeCategory ? "bg-gray-200" : "bg-white"
+                  } flex items-center justify-center gap-1 rounded-lg border border-gray-200 px-4 py-2 text-sm capitalize shadow hover:cursor-pointer hover:bg-gray-100`}
+                  onClick={() => {
+                    setActiveCategory(c);
+                  }}
+                  key={c}
+                >
+                  {c}{" "}
+                  <span className="rounded-md bg-gray-200 p-1 px-2 text-xs font-medium text-gray-900">
+                    {categoryCounts[c] ?? 0}
+                  </span>
+                </div>
+              ))}
           </div>
           <div className="relative mt-1 min-w-[300px] rounded-md pt-4 shadow-sm">
             <DebounceInput

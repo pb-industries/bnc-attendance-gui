@@ -251,6 +251,7 @@ export default function () {
           lootRaw,
           filterTerm: searchTerm,
           user,
+          hideEmpty: true,
         }}
       />
     </div>
