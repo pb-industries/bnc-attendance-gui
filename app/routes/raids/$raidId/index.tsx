@@ -22,7 +22,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 type LoaderData = { loot: Awaited<ReturnType<typeof getLootForRaid>> };
 
 export const loader: LoaderFunction = async ({ request, params }) => {
-  const loot = await getLootForRaid([BigInt(params.raidId ?? 0)]);
+  const loot = await getLootForRaid(
+    [BigInt(params.raidId ?? 0)],
+    undefined,
+    []
+  );
 
   return json<LoaderData>({ loot });
 };
@@ -49,7 +53,11 @@ export const action: ActionFunction = async ({ request, params }) => {
     },
   });
 
-  const loot = await getLootForRaid([BigInt(params.raidId ?? 0)]);
+  const loot = await getLootForRaid(
+    [BigInt(params.raidId ?? 0)],
+    undefined,
+    []
+  );
 
   return json<LoaderData>({ loot });
 };

@@ -51,7 +51,9 @@ export async function getLootForRaid(
     categories = ["bis"];
   }
 
-  where.push({ item: { category: { in: categories } } });
+  if (categories.length) {
+    where.push({ item: { category: { in: categories } } });
+  }
 
   if (playerId) {
     where.push({ looted_by_id: playerId });
