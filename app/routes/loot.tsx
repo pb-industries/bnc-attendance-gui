@@ -1,12 +1,17 @@
 import {
   ActionFunction,
+  Form,
   json,
   LoaderFunction,
   redirect,
   useLoaderData,
 } from "remix";
 import { getUserId, requireUser } from "~/session.server";
-import { getLatestRaidId, getLootForRaid } from "~/models/loot.server";
+import {
+  getLatestRaidId,
+  getLootForRaid,
+  getRaidList,
+} from "~/models/loot.server";
 import { useOptionalUser } from "~/utils";
 import { prisma } from "~/db.server";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -15,7 +20,11 @@ import drilldown from "highcharts/modules/drilldown.js";
 import HighchartsReact from "highcharts-react-official";
 import LootTable from "~/components/lootTable";
 
-type LoaderData = { loot: Awaited<ReturnType<typeof getLootForRaid>> };
+type LoaderData = {
+  loot: Awaited<ReturnType<typeof getLootForRaid>>;
+  raids: Awaited<ReturnType<typeof getRaidList>>;
+  raidId: bigint;
+};
 
 export const loader: LoaderFunction = async ({ request }) => {
   const { searchParams } = new URL(request.url);
@@ -24,19 +33,23 @@ export const loader: LoaderFunction = async ({ request }) => {
     return redirect("/");
   }
 
-  console.log(searchParams);
   const rawCategories = searchParams.get("categories");
   const categories = (
-    rawCategories ? rawCategories.replace(" ", "").split(",") : ["bis"]
+    rawCategories
+      ? rawCategories.replace(" ", "").split(",")
+      : ["bis", "rolled"]
   ) as Category[];
-  const raidId = await getLatestRaidId();
+  let raidId = BigInt(`${searchParams.get("raidId") ?? 0}`);
+  if (!raidId) {
+    raidId = (await getLatestRaidId()) ?? BigInt(0);
+  }
   const loot = await getLootForRaid(
     raidId ? [raidId] : [],
     undefined,
     categories
   );
 
-  return json<LoaderData>({ loot });
+  return json<LoaderData>({ loot, raids: await getRaidList(), raidId });
 };
 
 export const action: ActionFunction = async ({ request, params }) => {
@@ -61,10 +74,13 @@ export const action: ActionFunction = async ({ request, params }) => {
     },
   });
 
-  const raidId = await getLatestRaidId();
+  let raidId = BigInt(`${formData.get("raidId") ?? 0}`);
+  if (!raidId) {
+    raidId = (await getLatestRaidId()) ?? BigInt(0);
+  }
   const loot = await getLootForRaid(raidId ? [raidId] : []);
 
-  return json<LoaderData>({ loot });
+  return json<LoaderData>({ loot, raidId, raids: await getRaidList() });
 };
 
 type Category = "bis" | "rolled" | "trash" | "uncategorized";
@@ -77,13 +93,18 @@ type DrilldownDatum = {
 
 export default function () {
   const user = useOptionalUser();
-  const [chartCategories, setChartCategories] = useState<Category[]>(["bis"]);
+  const filterFormSubmit = useRef(null);
+  const [chartCategories, setChartCategories] = useState<Category[]>([
+    "bis",
+    "rolled",
+    "trash",
+  ]);
   const [lootDistribution, setLootDistribution] = useState<DrilldownDatum[]>(
     []
   );
   const [mounted, setMounted] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const { loot: lootRaw } = useLoaderData<LoaderData>();
+  const { loot: lootRaw, raids, raidId } = useLoaderData<LoaderData>();
 
   useMemo(() => {
     if (!mounted && typeof window !== "undefined") {
@@ -137,6 +158,33 @@ export default function () {
 
   return (
     <div className="w-full">
+      <nav className="w-full">
+        <Form method="get">
+          <select
+            name="raidId"
+            defaultValue={`${raidId}`}
+            onChange={(e) => filterFormSubmit?.current?.click()}
+          >
+            {raids.map((r) => (
+              <option key={`${r.id}`} value={`${r.id}`}>
+                {r.name}
+              </option>
+            ))}
+          </select>
+          {/* <select
+            name="categories"
+            defaultValue={`${chartCategories.join(",")}`}
+          >
+            <option value="bis">bis</option>
+            <option value="rolled">rolled</option>
+            <option value="trash">trash</option>
+            <option value="uncategorized">uncategorized</option>
+          </select> */}
+          <button ref={filterFormSubmit} className="hidden" type="submit">
+            Refresh
+          </button>
+        </Form>
+      </nav>
       <HighchartsReact
         highcharts={Highcharts}
         options={{

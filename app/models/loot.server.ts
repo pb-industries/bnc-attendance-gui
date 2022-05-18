@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Prisma, raid } from "@prisma/client";
 import { prisma } from "~/db.server";
 
 export type LootLine = {
@@ -20,6 +20,24 @@ export async function getLatestRaidId() {
   });
 
   return history?.raid_id;
+}
+
+export async function getRaidList() {
+  const lootHistory = (await prisma.$queryRaw`
+    SELECT
+      r.name,
+      r.created_at,
+      r.id::string
+    FROM loot_history lh
+    INNER JOIN raid r ON lh.raid_id = r.id
+    GROUP BY r.id
+  `) as raid[];
+
+  console.log(lootHistory);
+
+  return lootHistory.map((raid) => {
+    return { name: raid.name, created_at: raid.created_at, id: `${raid.id}` };
+  });
 }
 
 export async function getLootForRaid(
