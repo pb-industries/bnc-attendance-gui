@@ -118,7 +118,7 @@ export default function () {
     const distribution: { [key: string]: DrilldownDatum } = {};
     lootRaw.map((lr) => {
       if (
-        lr.item.category === "bis"
+        lr.item.category.toLowerCase().trim() !== "bis"
         // !chartCategories.includes((lr.item.category ?? "trash") as Category)
       ) {
         return;
