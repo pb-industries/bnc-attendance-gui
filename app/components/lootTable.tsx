@@ -271,6 +271,10 @@ const LootTable: FC<LoaderData> = ({
           </thead>
           <tbody>
             {sortedLootData.map((lh, idx) => {
+              const isPassToken = `${lh.item_id}` === "756381770069475329";
+              if (isPassToken) {
+                lh.category = "bis";
+              }
               const date = new Date(
                 Date.parse(lh?.looted_at as unknown as string)
               );
@@ -285,15 +289,21 @@ const LootTable: FC<LoaderData> = ({
                   key={`${lh.id}`}
                 >
                   <td className="flex items-center gap-4 whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">
-                    <a
-                      className="capitalize text-blue-500"
-                      href={`https://everquest.allakhazam.com/db/item.html?item=${lh.lucy_id};source=lucy`}
-                    >
-                      {lh?.name}
-                    </a>
+                    {!isPassToken ? (
+                      <a
+                        className="capitalize text-blue-500"
+                        href={`https://everquest.allakhazam.com/db/item.html?item=${lh.lucy_id};source=lucy`}
+                      >
+                        {lh?.name}
+                      </a>
+                    ) : (
+                      <span className="rounded-lg bg-orange-200 px-4 py-1">
+                        Passed
+                      </span>
+                    )}
                   </td>
                   <td className="hidden whitespace-nowrap py-4 pr-3 text-sm font-medium capitalize text-gray-900 sm:table-cell">
-                    {lh?.quantity}
+                    {isPassToken ? null : lh?.quantity}
                   </td>
                   <td className="hidden whitespace-nowrap py-4 pr-3 text-sm font-medium capitalize text-gray-900 sm:table-cell">
                     <span className="rounded-lg bg-gray-200 px-4 py-1">

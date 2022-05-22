@@ -118,8 +118,9 @@ export default function () {
     const distribution: { [key: string]: DrilldownDatum } = {};
     lootRaw.map((lr) => {
       if (
-        lr.item.category.toLowerCase().trim() !== "bis"
-        // !chartCategories.includes((lr.item.category ?? "trash") as Category)
+        (lr.item.category ?? "trash").toLowerCase().trim() !== "bis" ||
+        // Sacred water is our pass token
+        `${lr.item_id}` === "756381770069475329"
       ) {
         return;
       }
