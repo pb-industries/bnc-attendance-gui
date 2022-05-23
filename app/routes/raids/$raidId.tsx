@@ -14,7 +14,7 @@ import RequestTicksModal from "~/components/raids/requestTicksModal";
 import GenerateLottoRangeModal from "~/components/raids/generateLottoRangeModal";
 import { getMains, getMainsAtTick } from "~/models/roster.server";
 import { formatDate, getRollRange, useOptionalUser } from "~/utils";
-import { requireUser } from "~/session.server";
+import { getUser, requireUser } from "~/session.server";
 import { player } from "@prisma/client";
 
 type LoaderData = {
@@ -75,7 +75,7 @@ export const action: ActionFunction = async ({ request }) => {
 };
 
 export const loader: LoaderFunction = async ({ request, params }) => {
-  const user = await requireUser(request);
+  const user = await getUser(request);
   const raid = await getRaid({ id: (params.raidId ?? 0) as unknown as number });
   const raidTicks = await getRaidTicks(params.raidId ?? 0);
   return json<LoaderData>({

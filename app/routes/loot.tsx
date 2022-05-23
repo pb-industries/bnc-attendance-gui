@@ -30,10 +30,6 @@ type LoaderData = {
 
 export const loader: LoaderFunction = async ({ request }) => {
   const { searchParams } = new URL(request.url);
-  const userId = await getUserId(request);
-  if (!userId) {
-    return redirect("/");
-  }
 
   const rawCategories = searchParams.get("categories");
   const categories = (

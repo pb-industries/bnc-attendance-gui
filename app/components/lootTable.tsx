@@ -183,12 +183,12 @@ const LootTable: FC<LoaderData> = ({
     });
 
     setCategoryCounts(counts);
-    filterLoot(filterTerm);
-  }, [lootRaw, sortConfig]);
+    filterLoot(searchTerm);
+  }, [lootRaw, sortConfig, searchTerm, activeCategory]);
 
   useEffect(() => {
-    filterLoot(filterTerm);
-  }, [filterTerm, activeCategory]);
+    setSearchTerm(filterTerm);
+  }, [filterTerm]);
 
   const requestSort = (key: string) => {
     let direction: "ascending" | "descending" = "ascending";
@@ -347,7 +347,12 @@ const LootTable: FC<LoaderData> = ({
                 >
                   {c}{" "}
                   <span className="rounded-md bg-gray-200 p-1 px-2 text-xs font-medium text-gray-900">
-                    {categoryCounts[c] ?? 0}
+                    {c === activeCategory && searchTerm.length > 0
+                      ? `${Math.min(
+                          sortedLootData.length,
+                          categoryCounts[c] ?? 0
+                        )}/${categoryCounts[c] ?? 0}`
+                      : categoryCounts[c] ?? 0}
                   </span>
                 </div>
               ))}
