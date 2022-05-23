@@ -130,7 +130,6 @@ export default function () {
       };
     });
 
-    console.log(filteredData);
     setSortedLootData(filteredData);
   };
 

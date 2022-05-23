@@ -131,11 +131,9 @@ const LootTable: FC<LoaderData> = ({
   };
 
   const showAllData = () => {
-    console.log(activeCategory);
     return setSortedLootData(
       lootRaw
         .map((s) => {
-          console.log(activeCategory, s.item.category);
           return activeCategory === s?.item?.category ? parseRaw(s) : null;
         })
         .filter(Boolean)
@@ -227,7 +225,6 @@ const LootTable: FC<LoaderData> = ({
 
   useEffect(() => {
     let elem = document.querySelector("#windowed-table");
-    console.log(elem);
     if (!elem) {
       return;
     }

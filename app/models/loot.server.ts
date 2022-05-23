@@ -33,8 +33,6 @@ export async function getRaidList() {
     GROUP BY r.id
   `) as raid[];
 
-  console.log(lootHistory);
-
   return lootHistory.map((raid) => {
     return { name: raid.name, created_at: raid.created_at, id: `${raid.id}` };
   });

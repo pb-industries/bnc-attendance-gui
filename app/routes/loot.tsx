@@ -135,7 +135,6 @@ export default function () {
     if (includeRolled) {
       categories.add("rolled");
     }
-    console.log(categories);
 
     lootRaw.map((lr) => {
       if (
