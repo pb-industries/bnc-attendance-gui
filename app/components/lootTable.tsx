@@ -12,6 +12,7 @@ import { Form, Link } from "remix";
 import { getLootForRaid } from "~/models/loot.server";
 import { formatDate } from "~/utils";
 import { FixedSizeList as List, FixedSizeListProps } from "react-window";
+import debounce from "lodash.debounce";
 
 type Category = "bis" | "rolled" | "trash" | "uncategorized";
 type LoaderData = {
@@ -43,7 +44,7 @@ const Inner = React.forwardRef<HTMLDivElement, React.HTMLProps<HTMLDivElement>>(
   function Inner({ children, ...rest }, ref) {
     const { header, footer, top } = useContext(VirtualTableContext);
     return (
-      <div {...rest} ref={ref}>
+      <div id="windowed-table" {...rest} ref={ref}>
         <table style={{ top, position: "absolute", width: "100%" }}>
           {header}
           <tbody>{children}</tbody>
@@ -130,16 +131,17 @@ const LootTable: FC<LoaderData> = ({
   };
 
   const showAllData = () => {
+    console.log(activeCategory);
     return setSortedLootData(
       lootRaw
         .map((s) => {
+          console.log(activeCategory, s.item.category);
           return activeCategory === s?.item?.category ? parseRaw(s) : null;
         })
         .filter(Boolean)
     );
   };
   const filterLoot = (term: string) => {
-    console.log("term is", term);
     if (!term) {
       return showAllData();
     }
@@ -148,6 +150,7 @@ const LootTable: FC<LoaderData> = ({
     const filteredData = lootRaw
       .map((item) => {
         item = parseRaw(item);
+
         const matches = [
           item?.name?.toLowerCase().trim(),
           item?.looted_by_name?.toLowerCase().trim(),
@@ -156,7 +159,10 @@ const LootTable: FC<LoaderData> = ({
           return showAllData();
         }
 
-        if (!matches.some((t) => filters.some((f) => t.includes(f)))) {
+        if (
+          item.category !== activeCategory ||
+          !matches.some((t) => filters.some((f) => t.includes(f)))
+        ) {
           return null;
         }
         return item;
@@ -210,6 +216,29 @@ const LootTable: FC<LoaderData> = ({
     setSortedLootData(newLoot);
   };
 
+  const handleScroll = debounce(() => {
+    if (
+      typeof zamTooltip !== "undefined" &&
+      zamTooltip.hasOwnProperty("init")
+    ) {
+      zamTooltip.init();
+    }
+  }, 25);
+
+  useEffect(() => {
+    let elem = document.querySelector("#windowed-table");
+    console.log(elem);
+    if (!elem) {
+      return;
+    }
+    elem = elem.parentNode;
+    elem.addEventListener("scroll", handleScroll);
+
+    return () => {
+      elem.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
   useEffect(() => {
     if (
       typeof zamTooltip !== "undefined" &&
@@ -217,7 +246,7 @@ const LootTable: FC<LoaderData> = ({
     ) {
       zamTooltip.init();
     }
-  }, [sortedLootData, lootRaw]);
+  }, [sortedLootData]);
 
   const Row = ({ index }) => {
     const idx = index;
