@@ -245,3 +245,7 @@ export function getRollRange(
 
   return ranges.map((r) => `${r.p.name} ${r.lower}-${r.upper}`).join(" | ");
 }
+
+export function classNames(...classes: string[]) {
+  return classes.filter(Boolean).join(" ");
+}

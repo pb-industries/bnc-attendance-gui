@@ -9,16 +9,18 @@ import {
 import { getUserId, requireUser } from "~/session.server";
 import {
   getLatestRaidId,
+  getLootForPeriod,
   getLootForRaid,
   getRaidList,
 } from "~/models/loot.server";
-import { useOptionalUser } from "~/utils";
+import { classNames, useOptionalUser } from "~/utils";
 import { prisma } from "~/db.server";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Highcharts from "highcharts";
 import drilldown from "highcharts/modules/drilldown.js";
 import HighchartsReact from "highcharts-react-official";
 import LootTable from "~/components/lootTable";
+import { Switch } from "@headlessui/react";
 
 type LoaderData = {
   loot: Awaited<ReturnType<typeof getLootForRaid>>;
@@ -39,6 +41,18 @@ export const loader: LoaderFunction = async ({ request }) => {
       ? rawCategories.replace(" ", "").split(",")
       : ["bis", "rolled"]
   ) as Category[];
+  let period = parseInt(`${searchParams.get("period") ?? 0}`) ?? false;
+
+  if (period) {
+    const loot = await getLootForPeriod(period, categories);
+
+    return json<LoaderData>({
+      loot,
+      raids: await getRaidList(),
+      raidId: BigInt(0),
+    });
+  }
+
   let raidId = BigInt(`${searchParams.get("raidId") ?? 0}`);
   if (!raidId) {
     raidId = (await getLatestRaidId()) ?? BigInt(0);
@@ -94,6 +108,8 @@ type DrilldownDatum = {
 export default function () {
   const user = useOptionalUser();
   const filterFormSubmit = useRef(null);
+  const periods = [5, 10, 15, 20, 30, 60, 90];
+  const [filterBy, setFilterBy] = useState<"raidId" | "period">("raidId");
   const [chartCategories, setChartCategories] = useState<Category[]>([
     "bis",
     "rolled",
@@ -113,6 +129,10 @@ export default function () {
       console.log("drilled down");
     }
   }, [mounted]);
+
+  useMemo(() => {
+    filterFormSubmit?.current?.click();
+  }, [filterBy]);
 
   useMemo(() => {
     const distribution: { [key: string]: DrilldownDatum } = {};
@@ -160,19 +180,33 @@ export default function () {
 
   return (
     <div className="w-full">
-      <nav className="w-full">
+      <nav className="flex w-full items-center justify-between">
         <Form method="get">
-          <select
-            name="raidId"
-            defaultValue={`${raidId}`}
-            onChange={(e) => filterFormSubmit?.current?.click()}
-          >
-            {raids.map((r) => (
-              <option key={`${r.id}`} value={`${r.id}`}>
-                {r.name}
-              </option>
-            ))}
-          </select>
+          {filterBy === "raidId" ? (
+            <select
+              name="raidId"
+              defaultValue={`${raidId}`}
+              onChange={(e) => filterFormSubmit?.current?.click()}
+            >
+              {raids.map((r) => (
+                <option key={`${r.id}`} value={`${r.id}`}>
+                  {r.name}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <select
+              name="period"
+              defaultValue={`${raidId}`}
+              onChange={(e) => filterFormSubmit?.current?.click()}
+            >
+              {periods.map((p) => (
+                <option key={`period-${p}`} value={`${p}`}>
+                  Last {p} days
+                </option>
+              ))}
+            </select>
+          )}
           {/* <select
             name="categories"
             defaultValue={`${chartCategories.join(",")}`}
@@ -186,6 +220,31 @@ export default function () {
             Refresh
           </button>
         </Form>
+        <Switch.Group as="div" className="flex items-center">
+          <Switch
+            checked={filterBy === "raidId"}
+            onChange={() => {
+              setFilterBy(filterBy === "raidId" ? "period" : "raidId");
+            }}
+            className={classNames(
+              filterBy === "raidId" ? "bg-indigo-600" : "bg-gray-200",
+              "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            )}
+          >
+            <span
+              aria-hidden="true"
+              className={classNames(
+                filterBy === "raidId" ? "translate-x-5" : "translate-x-0",
+                "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+              )}
+            />
+          </Switch>
+          <Switch.Label as="span" className="ml-3">
+            <span className="text-sm font-medium text-gray-900">
+              Filter by raid?
+            </span>
+          </Switch.Label>
+        </Switch.Group>
       </nav>
       <HighchartsReact
         highcharts={Highcharts}
