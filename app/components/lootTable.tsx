@@ -464,7 +464,7 @@ const LootTable: FC<LoaderData> = ({
           </div>
         </div>
         <VirtualTable
-          height={500}
+          height={1000}
           width="100%"
           itemCount={sortedLootData.length}
           itemSize={64.57}

@@ -137,7 +137,9 @@ export default function () {
   }, [mounted]);
 
   useMemo(() => {
-    filterFormSubmit?.current?.click();
+    setTimeout(() => {
+      filterFormSubmit?.current?.click();
+    }, 50);
   }, [filterBy]);
 
   useMemo(() => {
