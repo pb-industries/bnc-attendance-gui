@@ -17,3 +17,24 @@ img.eq-link-icon {
 td > a[data-zam-modified]:first-of-type {
   position: absolute;
 }
+
+/* width */
+div::-webkit-scrollbar {
+  width: 5px;
+}
+
+/* Track */
+div::-webkit-scrollbar-track {
+  background: #eee;
+}
+
+/* Handle */
+div::-webkit-scrollbar-thumb {
+  background: #aaa;
+  border-radius: 5px;
+}
+
+/* Handle on hover */
+div::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}

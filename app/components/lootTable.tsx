@@ -151,7 +151,7 @@ const LootTable: FC<LoaderData> = ({
   const filterLoot = (term: string) => {
     const sortedCounts = { bis: 0, rolled: 0, trash: 0, uncategorized: 0 };
     let filteredData = [];
-    if (!term) {
+    if (term) {
       const filters = term.split("+").map((term) => term.trim().toLowerCase());
 
       filteredData = lootRaw
@@ -411,7 +411,7 @@ const LootTable: FC<LoaderData> = ({
     <div className="grid min-h-[500px] grid-cols-12 gap-8">
       <div className="col-span-12">
         <h1 className="text-2xl font-medium">Items looted</h1>
-        <div className="flex justify-between">
+        <div className="sticky top-[140px] z-10 flex justify-between border-b border-gray-100 bg-white pb-4">
           <div className="flex gap-2 pt-4">
             {categories
               .filter((c) => (hideEmpty ? categoryCounts[c].total > 0 : true))
@@ -464,7 +464,7 @@ const LootTable: FC<LoaderData> = ({
           </div>
         </div>
         <VirtualTable
-          height={1000}
+          height={500}
           width="100%"
           itemCount={sortedLootData.length}
           itemSize={64.57}
