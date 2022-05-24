@@ -149,7 +149,7 @@ const LootTable: FC<LoaderData> = ({
   };
 
   const filterLoot = (term: string) => {
-    const sortedCounts = { bis: 0, rolled: 0 };
+    const sortedCounts = { bis: 0, rolled: 0, trash: 0, uncategorized: 0 };
     let filteredData = [];
     if (!term) {
       const filters = term.split("+").map((term) => term.trim().toLowerCase());
@@ -168,12 +168,14 @@ const LootTable: FC<LoaderData> = ({
           const hasMatches = matches.some((t) =>
             filters.some((f) => t.includes(f))
           );
-          console.log(hasMatches);
           if (hasMatches) {
             sortedCounts[item.category] += 1;
           }
 
-          if (item.category !== activeCategory || !hasMatches) {
+          if (
+            (item?.category ?? "uncategorized") !== activeCategory ||
+            !hasMatches
+          ) {
             return null;
           }
           return item;
