@@ -20,6 +20,8 @@ type LoaderData = {
   user: user;
   filterTerm: string;
   hideEmpty?: boolean;
+  includePasses: boolean;
+  withRaid: boolean;
 };
 
 /** Context for cross component communication */
@@ -97,6 +99,8 @@ const LootTable: FC<LoaderData> = ({
   lootRaw,
   filterTerm,
   hideEmpty,
+  includePasses,
+  withRaid,
 }) => {
   const [categories] = useState<Category[]>([
     "bis",
@@ -105,8 +109,13 @@ const LootTable: FC<LoaderData> = ({
     "uncategorized",
   ]);
   const [categoryCounts, setCategoryCounts] = useState<{
-    [key in Category]: number;
-  }>({ bis: 0, rolled: 0, trash: 0, uncategorized: 0 });
+    [key in Category]: { total: number; sorted: number };
+  }>({
+    bis: { total: 0, sorted: 0 },
+    rolled: { total: 0, sorted: 0 },
+    trash: { total: 0, sorted: 0 },
+    uncategorized: { total: 0, sorted: 0 },
+  });
   const [searchTerm, setSearchTerm] = useState("");
   const [sortedLootData, setSortedLootData] = useState<any[]>([]);
   const [activeCategory, setActiveCategory] = useState<Category>("bis");
@@ -126,7 +135,8 @@ const LootTable: FC<LoaderData> = ({
       looted_by_id: l.looted_by_id,
       looted_at: l.created_at,
       looted_by_name: l.player.name,
-      hidden: false,
+      raid_name: l.raid?.name ?? "unknown",
+      raid_id: l.raid_id ?? "unknown",
     };
   };
 
@@ -140,8 +150,10 @@ const LootTable: FC<LoaderData> = ({
     );
   };
   const filterLoot = (term: string) => {
+    const sortedCounts = { bis: 0, rolled: 0 };
     if (!term) {
-      return showAllData();
+      showAllData();
+      return sortedCounts;
     }
     const filters = term.split("+").map((term) => term.trim().toLowerCase());
 
@@ -154,40 +166,53 @@ const LootTable: FC<LoaderData> = ({
           item?.looted_by_name?.toLowerCase().trim(),
         ].filter((t) => !!t);
         if (matches.length === 0) {
-          return showAllData();
+          return null;
+        }
+        const hasMatches = matches.some((t) =>
+          filters.some((f) => t.includes(f))
+        );
+        console.log(hasMatches);
+        if (hasMatches) {
+          sortedCounts[item.category] += 1;
         }
 
-        if (
-          item.category !== activeCategory ||
-          !matches.some((t) => filters.some((f) => t.includes(f)))
-        ) {
+        if (item.category !== activeCategory || !hasMatches) {
           return null;
         }
         return item;
       })
       .filter(Boolean);
 
-    setSortedLootData(filteredData);
+    if (filteredData.length === 0) {
+      showAllData();
+    } else {
+      setSortedLootData(filteredData);
+    }
+
+    return sortedCounts;
   };
   useMemo(() => {
     if (!lootRaw) {
       return;
     }
 
-    const counts: { [key in Category]: number } = {
-      bis: 0,
-      rolled: 0,
-      trash: 0,
-      uncategorized: 0,
+    const counts: { [key in Category]: { total: number; sorted: number } } = {
+      bis: { total: 0, sorted: 0 },
+      rolled: { total: 0, sorted: 0 },
+      trash: { total: 0, sorted: 0 },
+      uncategorized: { total: 0, sorted: 0 },
     };
 
     lootRaw.forEach(({ item }) => {
       const category = (item?.category || "uncategorized") as Category;
-      counts[category] = (counts[category] ?? 0) + 1;
+      counts[category].total = (counts[category].total ?? 0) + 1;
     });
 
+    const { bis, rolled } = filterLoot(searchTerm);
+    counts.bis.sorted = bis;
+    counts.rolled.sorted = rolled;
+
     setCategoryCounts(counts);
-    filterLoot(searchTerm);
   }, [lootRaw, sortConfig, searchTerm, activeCategory]);
 
   useEffect(() => {
@@ -254,7 +279,7 @@ const LootTable: FC<LoaderData> = ({
     }
     const date = new Date(Date.parse(lh?.looted_at as unknown as string));
 
-    if (!lh) {
+    if (!lh || (!includePasses && isPassToken)) {
       return null;
     }
 
@@ -283,6 +308,15 @@ const LootTable: FC<LoaderData> = ({
         <td className="hidden whitespace-nowrap py-4 pr-3 text-sm font-medium capitalize text-gray-900 sm:table-cell">
           <Link className="text-blue-500" to={`/players/${lh?.looted_by_id}`}>
             {lh?.looted_by_name}
+          </Link>
+        </td>
+        <td
+          className={`${
+            withRaid ? "sm:table-cell" : "sm:hidden"
+          } hidden whitespace-nowrap py-4 pr-3 text-sm font-medium capitalize text-gray-900`}
+        >
+          <Link className="text-blue-500" to={`/raids/${lh?.raid_id}`}>
+            {lh?.raid_name}
           </Link>
         </td>
         <td className="hidden whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 lg:table-cell">
@@ -360,7 +394,7 @@ const LootTable: FC<LoaderData> = ({
         <div className="flex justify-between">
           <div className="flex gap-2 pt-4">
             {categories
-              .filter((c) => (hideEmpty ? categoryCounts[c] > 0 : true))
+              .filter((c) => (hideEmpty ? categoryCounts[c].total > 0 : true))
               .map((c) => (
                 <div
                   className={`${
@@ -373,12 +407,10 @@ const LootTable: FC<LoaderData> = ({
                 >
                   {c}{" "}
                   <span className="rounded-md bg-gray-200 p-1 px-2 text-xs font-medium text-gray-900">
-                    {c === activeCategory && searchTerm.length > 0
-                      ? `${Math.min(
-                          sortedLootData.length,
-                          categoryCounts[c] ?? 0
-                        )}/${categoryCounts[c] ?? 0}`
-                      : categoryCounts[c] ?? 0}
+                    {categoryCounts[c].total === categoryCounts[c].sorted ||
+                    categoryCounts[c].sorted === 0
+                      ? categoryCounts[c].total
+                      : `${categoryCounts[c].sorted}/${categoryCounts[c].total}`}
                   </span>
                 </div>
               ))}
@@ -416,8 +448,10 @@ const LootTable: FC<LoaderData> = ({
           width="100%"
           itemCount={sortedLootData.length}
           itemSize={64.57}
+          includePasses={includePasses}
+          className="mt-6"
           header={
-            <thead className="bg-gray-50">
+            <thead className="sticky top-0 z-10 bg-gray-50">
               <tr>
                 <th
                   onClick={() => requestSort("name")}
@@ -450,6 +484,16 @@ const LootTable: FC<LoaderData> = ({
                 >
                   Looted by
                   {renderSortIndicator("looted_by_name")}
+                </th>
+                <th
+                  onClick={() => requestSort("raid_name")}
+                  scope="col"
+                  className={`font-semibolds hidden px-3 py-3.5 text-left text-sm text-gray-900 ${
+                    withRaid ? "sm:table-cell" : "sm:hidden"
+                  }`}
+                >
+                  Raid
+                  {renderSortIndicator("raid_name")}
                 </th>
                 <th
                   onClick={() => requestSort("was_assigned")}

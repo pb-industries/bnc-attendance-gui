@@ -44,7 +44,10 @@ export default function Shell() {
       /> */}
       <div className="relative flex min-h-screen flex-col">
         {/* Navbar */}
-        <Disclosure as="nav" className="flex-shrink-0 bg-gray-900">
+        <Disclosure
+          as="nav"
+          className="sticky top-0 z-20 flex-shrink-0 bg-gray-900"
+        >
           {({ open }) => (
             <>
               <div className="mx-auto max-w-7xl px-2 sm:px-4 lg:px-8">

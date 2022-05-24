@@ -121,6 +121,7 @@ export default function () {
   const [filterBy, setFilterBy] = useState<"raidId" | "period">("raidId");
   const [includeBis, setIncludeBis] = useState(true);
   const [includeRolled, setIncludeRolled] = useState(false);
+  const [includePasses, setIncludePasses] = useState(false);
   const [lootDistribution, setLootDistribution] = useState<DrilldownDatum[]>(
     []
   );
@@ -161,10 +162,15 @@ export default function () {
     });
 
     lootRaw.map((lr) => {
+      // Sacred water is our pass token
+      const isPassToken = `${lr.item_id}` === "756381770069475329";
+      if (isPassToken && !includePasses) {
+        return;
+      }
+
       if (
-        !categories.has((lr.item.category ?? "trash").toLowerCase().trim()) ||
-        // Sacred water is our pass token
-        `${lr.item_id}` === "756381770069475329"
+        !isPassToken &&
+        !categories.has((lr.item.category ?? "trash").toLowerCase().trim())
       ) {
         return;
       }
@@ -200,105 +206,151 @@ export default function () {
     });
 
     setLootDistribution(Object.values(distribution));
-  }, [lootRaw, includeRolled, includeBis, filterBy]);
+  }, [lootRaw, includeRolled, includeBis, includePasses, filterBy]);
 
   return (
-    <div className="w-full">
-      <nav className="mb-4 flex w-full items-center justify-between border-b border-gray-200 py-2">
-        <div className="flex gap-4">
+    <div className="relative w-full">
+      <nav className="sticky top-[64px] z-10 -mt-4 mb-4 flex w-full items-center justify-between border-b border-gray-200 bg-white py-4">
+        <div className="flex items-center gap-4">
           <Form method="get">
             {filterBy === "raidId" ? (
-              <select
-                name="raidId"
-                onChange={(e) => filterFormSubmit?.current?.click()}
-              >
-                {raids.map((r) => (
-                  <option key={`${r.id}`} value={`${r.id}`}>
-                    {r.name}
-                  </option>
-                ))}
-              </select>
+              <div>
+                <label
+                  htmlFor="raidId"
+                  className="block text-xs font-medium text-gray-700"
+                >
+                  Raid name
+                </label>
+                <select
+                  className="mt-1 block w-full min-w-[256px] rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  name="raidId"
+                  onChange={(e) => filterFormSubmit?.current?.click()}
+                >
+                  {raids.map((r) => (
+                    <option key={`${r.id}`} value={`${r.id}`}>
+                      {r.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             ) : (
-              <select
-                name="period"
-                defaultValue={`${raidId}`}
-                onChange={(e) => filterFormSubmit?.current?.click()}
-              >
-                {periods.map((p) => (
-                  <option key={`period-${p}`} value={`${p}`}>
-                    Last {p} days
-                  </option>
-                ))}
-              </select>
+              <div>
+                <label
+                  htmlFor="period"
+                  className="block text-xs font-medium text-gray-700"
+                >
+                  Period
+                </label>
+                <select
+                  className="min-w-[256px]"
+                  name="period"
+                  defaultValue={`${raidId}`}
+                  onChange={(e) => filterFormSubmit?.current?.click()}
+                >
+                  {periods.map((p) => (
+                    <option key={`period-${p}`} value={`${p}`}>
+                      Last {p} days
+                    </option>
+                  ))}
+                </select>
+              </div>
             )}
             <button ref={filterFormSubmit} className="hidden" type="submit">
               Refresh
             </button>
           </Form>
-          <Switch.Group as="div" className="flex items-center">
+          <Switch.Group as="div" className="flex items-center gap-4">
+            <div className="flex flex-col-reverse gap-1">
+              <Switch
+                checked={filterBy === "raidId"}
+                onChange={() => {
+                  setFilterBy(filterBy === "raidId" ? "period" : "raidId");
+                }}
+                className={classNames(
+                  filterBy === "raidId" ? "bg-indigo-600" : "bg-gray-200",
+                  "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                )}
+              >
+                <span
+                  aria-hidden="true"
+                  className={classNames(
+                    filterBy === "raidId" ? "translate-x-5" : "translate-x-0",
+                    "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                  )}
+                />
+              </Switch>
+              <Switch.Label as="span">
+                <span className="text-xs text-gray-700">Filter by raid?</span>
+              </Switch.Label>
+            </div>
+          </Switch.Group>
+        </div>
+
+        <Switch.Group as="div" className="flex items-center gap-4">
+          <div className="flex flex-col-reverse gap-1">
             <Switch
-              checked={filterBy === "raidId"}
-              onChange={() => {
-                setFilterBy(filterBy === "raidId" ? "period" : "raidId");
-              }}
+              checked={includeBis}
+              onChange={() => setIncludeBis(!includeBis)}
               className={classNames(
-                filterBy === "raidId" ? "bg-indigo-600" : "bg-gray-200",
+                includeBis ? "bg-indigo-600" : "bg-gray-200",
                 "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
               )}
             >
               <span
                 aria-hidden="true"
                 className={classNames(
-                  filterBy === "raidId" ? "translate-x-5" : "translate-x-0",
+                  includeBis ? "translate-x-5" : "translate-x-0",
                   "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
                 )}
               />
             </Switch>
-            <Switch.Label as="span" className="ml-2">
-              <span className="text-sm text-gray-700">Filter by raid?</span>
+            <Switch.Label as="span">
+              <span className="text-xs text-gray-700">Include BiS</span>
             </Switch.Label>
-          </Switch.Group>
-        </div>
+          </div>
+          <div className="flex flex-col-reverse gap-1">
+            <Switch
+              checked={includeRolled}
+              onChange={() => setIncludeRolled(!includeRolled)}
+              className={classNames(
+                includeRolled ? "bg-indigo-600" : "bg-gray-200",
+                "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              )}
+            >
+              <span
+                aria-hidden="true"
+                className={classNames(
+                  includeRolled ? "translate-x-5" : "translate-x-0",
+                  "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                )}
+              />
+            </Switch>
+            <Switch.Label as="span">
+              <span className="text-xs text-gray-700">Include Rolled</span>
+            </Switch.Label>
+          </div>
 
-        <Switch.Group as="div" className="flex items-center gap-2">
-          <Switch
-            checked={includeBis}
-            onChange={() => setIncludeBis(!includeBis)}
-            className={classNames(
-              includeBis ? "bg-indigo-600" : "bg-gray-200",
-              "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-            )}
-          >
-            <span
-              aria-hidden="true"
+          <div className="flex flex-col-reverse gap-1">
+            <Switch
+              checked={includePasses}
+              onChange={() => setIncludePasses(!includePasses)}
               className={classNames(
-                includeBis ? "translate-x-5" : "translate-x-0",
-                "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                includePasses ? "bg-indigo-600" : "bg-gray-200",
+                "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
               )}
-            />
-          </Switch>
-          <Switch.Label as="span">
-            <span className="text-sm text-gray-700">Include BiS</span>
-          </Switch.Label>
-          <Switch
-            checked={includeRolled}
-            onChange={() => setIncludeRolled(!includeRolled)}
-            className={classNames(
-              includeRolled ? "bg-indigo-600" : "bg-gray-200",
-              "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-            )}
-          >
-            <span
-              aria-hidden="true"
-              className={classNames(
-                includeRolled ? "translate-x-5" : "translate-x-0",
-                "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
-              )}
-            />
-          </Switch>
-          <Switch.Label as="span">
-            <span className="text-sm text-gray-700">Include Rolled</span>
-          </Switch.Label>
+            >
+              <span
+                aria-hidden="true"
+                className={classNames(
+                  includePasses ? "translate-x-5" : "translate-x-0",
+                  "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                )}
+              />
+            </Switch>
+            <Switch.Label as="span">
+              <span className="text-xs text-gray-700">Include Passes</span>
+            </Switch.Label>
+          </div>
         </Switch.Group>
       </nav>
       <HighchartsReact
@@ -372,6 +424,8 @@ export default function () {
           filterTerm: searchTerm,
           user,
           hideEmpty: true,
+          includePasses,
+          withRaid: filterBy === "period",
         }}
       />
     </div>
