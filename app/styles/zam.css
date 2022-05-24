@@ -13,3 +13,7 @@ img.eq-link-icon {
 .highcharts-root {
   width: 100% !important;
 }
+
+td > a[data-zam-modified]:first-of-type {
+  position: absolute;
+}

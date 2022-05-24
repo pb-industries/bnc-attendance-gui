@@ -263,7 +263,7 @@ const LootTable: FC<LoaderData> = ({
         <td className="flex items-center gap-4 whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">
           {!isPassToken ? (
             <a
-              className="capitalize text-blue-500"
+              className="ml-10 capitalize text-blue-500"
               href={`https://everquest.allakhazam.com/db/item.html?item=${lh.lucy_id};source=lucy`}
             >
               {lh?.name}
