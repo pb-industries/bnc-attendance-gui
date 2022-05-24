@@ -21,11 +21,13 @@ import drilldown from "highcharts/modules/drilldown.js";
 import HighchartsReact from "highcharts-react-official";
 import LootTable from "~/components/lootTable";
 import { Switch } from "@headlessui/react";
+import { getMains } from "~/models/roster.server";
 
 type LoaderData = {
   loot: Awaited<ReturnType<typeof getLootForRaid>>;
   raids: Awaited<ReturnType<typeof getRaidList>>;
   raidId: bigint;
+  mains: Awaited<ReturnType<typeof getMains>>;
 };
 
 export const loader: LoaderFunction = async ({ request }) => {
@@ -46,6 +48,7 @@ export const loader: LoaderFunction = async ({ request }) => {
       loot,
       raids: await getRaidList(),
       raidId: BigInt(0),
+      mains: await getMains(),
     });
   }
 
@@ -59,7 +62,12 @@ export const loader: LoaderFunction = async ({ request }) => {
     categories
   );
 
-  return json<LoaderData>({ loot, raids: await getRaidList(), raidId });
+  return json<LoaderData>({
+    loot,
+    raids: await getRaidList(),
+    raidId,
+    mains: await getMains(),
+  });
 };
 
 export const action: ActionFunction = async ({ request, params }) => {
@@ -90,7 +98,12 @@ export const action: ActionFunction = async ({ request, params }) => {
   }
   const loot = await getLootForRaid(raidId ? [raidId] : []);
 
-  return json<LoaderData>({ loot, raidId, raids: await getRaidList() });
+  return json<LoaderData>({
+    loot,
+    raidId,
+    raids: await getRaidList(),
+    mains: await getMains(),
+  });
 };
 
 type Category = "bis" | "rolled" | "trash" | "uncategorized";
@@ -113,7 +126,7 @@ export default function () {
   );
   const [mounted, setMounted] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const { loot: lootRaw, raids, raidId } = useLoaderData<LoaderData>();
+  const { loot: lootRaw, raids, raidId, mains } = useLoaderData<LoaderData>();
 
   useMemo(() => {
     if (!mounted && typeof window !== "undefined") {
@@ -135,6 +148,17 @@ export default function () {
     if (includeRolled) {
       categories.add("rolled");
     }
+
+    mains.forEach((m) => {
+      if (!distribution?.[`${m.id}`]) {
+        distribution[`${m.id}`] = {
+          playerId: `${m.id}`,
+          name: m.name,
+          total_items: 0,
+          drilldown: {},
+        };
+      }
+    });
 
     lootRaw.map((lr) => {
       if (
@@ -320,6 +344,10 @@ export default function () {
               name: "Main loot",
               colorByPoint: true,
               data: lootDistribution.map((p) => {
+                if (!p.total_items) {
+                  return null;
+                }
+
                 return { name: p.name, y: p.total_items, drilldown: p.name };
               }),
             },
