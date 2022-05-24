@@ -143,7 +143,12 @@ const LootTable: FC<LoaderData> = ({
   const showAllData = () => {
     return lootRaw
       .map((s) => {
-        return activeCategory === s?.item?.category ? parseRaw(s) : null;
+        const item = parseRaw(s);
+        const isPassToken = `${item.item_id}` === "756381770069475329";
+        if (!includePasses && isPassToken) {
+          return null;
+        }
+        return activeCategory === s?.item?.category ? item : null;
       })
       .filter(Boolean);
   };
@@ -157,12 +162,13 @@ const LootTable: FC<LoaderData> = ({
       filteredData = lootRaw
         .map((item) => {
           item = parseRaw(item);
+          const isPassToken = `${item.item_id}` === "756381770069475329";
 
           const matches = [
             item?.name?.toLowerCase().trim(),
             item?.looted_by_name?.toLowerCase().trim(),
           ].filter((t) => !!t);
-          if (matches.length === 0) {
+          if (matches.length === 0 || (isPassToken && !includePasses)) {
             return null;
           }
           const hasMatches = matches.some((t) =>
@@ -216,7 +222,7 @@ const LootTable: FC<LoaderData> = ({
     counts.rolled.sorted = rolled;
 
     setCategoryCounts(counts);
-  }, [lootRaw, searchTerm, activeCategory]);
+  }, [lootRaw, searchTerm, activeCategory, includePasses]);
 
   useMemo(() => {
     if (sortedLootData.length && sortConfig?.key && sortConfig?.direction) {
