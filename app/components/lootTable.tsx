@@ -141,56 +141,57 @@ const LootTable: FC<LoaderData> = ({
   };
 
   const showAllData = () => {
-    return setSortedLootData(
-      lootRaw
-        .map((s) => {
-          return activeCategory === s?.item?.category ? parseRaw(s) : null;
-        })
-        .filter(Boolean)
-    );
-  };
-  const filterLoot = (term: string) => {
-    const sortedCounts = { bis: 0, rolled: 0 };
-    if (!term) {
-      showAllData();
-      return sortedCounts;
-    }
-    const filters = term.split("+").map((term) => term.trim().toLowerCase());
-
-    const filteredData = lootRaw
-      .map((item) => {
-        item = parseRaw(item);
-
-        const matches = [
-          item?.name?.toLowerCase().trim(),
-          item?.looted_by_name?.toLowerCase().trim(),
-        ].filter((t) => !!t);
-        if (matches.length === 0) {
-          return null;
-        }
-        const hasMatches = matches.some((t) =>
-          filters.some((f) => t.includes(f))
-        );
-        console.log(hasMatches);
-        if (hasMatches) {
-          sortedCounts[item.category] += 1;
-        }
-
-        if (item.category !== activeCategory || !hasMatches) {
-          return null;
-        }
-        return item;
+    return lootRaw
+      .map((s) => {
+        return activeCategory === s?.item?.category ? parseRaw(s) : null;
       })
       .filter(Boolean);
+  };
+
+  const filterLoot = (term: string) => {
+    const sortedCounts = { bis: 0, rolled: 0 };
+    let filteredData = [];
+    if (!term) {
+      const filters = term.split("+").map((term) => term.trim().toLowerCase());
+
+      filteredData = lootRaw
+        .map((item) => {
+          item = parseRaw(item);
+
+          const matches = [
+            item?.name?.toLowerCase().trim(),
+            item?.looted_by_name?.toLowerCase().trim(),
+          ].filter((t) => !!t);
+          if (matches.length === 0) {
+            return null;
+          }
+          const hasMatches = matches.some((t) =>
+            filters.some((f) => t.includes(f))
+          );
+          console.log(hasMatches);
+          if (hasMatches) {
+            sortedCounts[item.category] += 1;
+          }
+
+          if (item.category !== activeCategory || !hasMatches) {
+            return null;
+          }
+          return item;
+        })
+        .filter(Boolean);
+    } else {
+      filteredData = showAllData();
+    }
 
     if (filteredData.length === 0) {
       showAllData();
-    } else {
-      setSortedLootData(filteredData);
     }
+
+    setSortedLootData(filteredData);
 
     return sortedCounts;
   };
+
   useMemo(() => {
     if (!lootRaw) {
       return;
@@ -213,7 +214,24 @@ const LootTable: FC<LoaderData> = ({
     counts.rolled.sorted = rolled;
 
     setCategoryCounts(counts);
-  }, [lootRaw, sortConfig, searchTerm, activeCategory]);
+  }, [lootRaw, searchTerm, activeCategory]);
+
+  useMemo(() => {
+    if (sortedLootData.length && sortConfig?.key && sortConfig?.direction) {
+      setSortedLootData(
+        sortedLootData.sort((a, b) => {
+          const key = sortConfig.key as keyof typeof a;
+          if (a?.[key]! < b?.[key]!) {
+            return sortConfig.direction === "ascending" ? -1 : 1;
+          }
+          if (a?.[key]! > b?.[key]!) {
+            return sortConfig.direction === "ascending" ? 1 : -1;
+          }
+          return 0;
+        })
+      );
+    }
+  }, [sortConfig]);
 
   useEffect(() => {
     setSearchTerm(filterTerm);
@@ -261,14 +279,14 @@ const LootTable: FC<LoaderData> = ({
     };
   }, []);
 
-  useEffect(() => {
+  useMemo(() => {
     if (
       typeof zamTooltip !== "undefined" &&
       zamTooltip.hasOwnProperty("init")
     ) {
       zamTooltip.init();
     }
-  }, [sortedLootData]);
+  }, [sortedLootData, sortConfig]);
 
   const Row = ({ index }) => {
     const idx = index;
