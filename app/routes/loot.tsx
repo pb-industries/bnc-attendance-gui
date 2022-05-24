@@ -200,7 +200,7 @@ export default function () {
     });
 
     setLootDistribution(Object.values(distribution));
-  }, [lootRaw, includeRolled, includeBis]);
+  }, [lootRaw, includeRolled, includeBis, filterBy]);
 
   return (
     <div className="w-full">
@@ -210,7 +210,6 @@ export default function () {
             {filterBy === "raidId" ? (
               <select
                 name="raidId"
-                defaultValue={`${raidId}`}
                 onChange={(e) => filterFormSubmit?.current?.click()}
               >
                 {raids.map((r) => (

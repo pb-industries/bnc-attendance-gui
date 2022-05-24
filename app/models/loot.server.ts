@@ -31,6 +31,7 @@ export async function getRaidList() {
     FROM loot_history lh
     INNER JOIN raid r ON lh.raid_id = r.id
     GROUP BY r.id
+    ORDER BY r.created_at DESC
   `) as raid[];
 
   return lootHistory.map((raid) => {
