@@ -305,7 +305,7 @@ export default function RaidIndexPage() {
                   alt=""
                 />
               </div>
-              {user?.player?.id === player?.id ||
+              {sessionUser?.player?.id === player?.id ||
               ["admin", "officer"].includes(sessionUser?.role ?? "guest") ? (
                 <div>
                   <div className="-mt-px flex divide-x divide-gray-200">
@@ -368,7 +368,7 @@ export default function RaidIndexPage() {
         open={isManagePlayerModalOpen}
         player={editPlayer}
         setOpen={setIsManagePlayerModalOpen}
-        canSetRank={["admin", "officer"].includes(user?.role ?? "guest")}
+        canSetRank={["admin", "officer"].includes(sessionUser?.role ?? "guest")}
       />
     </div>
   );
