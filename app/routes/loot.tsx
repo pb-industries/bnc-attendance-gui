@@ -366,6 +366,12 @@ export default function () {
                 const term = e.seriesOptions.data.map((p) => p[0]).join("+");
                 setSearchTerm(term);
               },
+              drillup: function (e) {
+                setTimeout(() => {
+                  setSearchTerm("");
+                }, 1000);
+                return true;
+              },
             },
           },
           title: { text: "Loot distribution by player" },
