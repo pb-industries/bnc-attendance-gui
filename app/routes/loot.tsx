@@ -132,7 +132,7 @@ export default function () {
     },
   ]);
   const filterFormSubmit = useRef(null);
-  const [filterBy, setFilterBy] = useState<"raidId" | "period">("raidId");
+  const [filterBy, setFilterBy] = useState<"raidId" | "period">("period");
   const [includeBis, setIncludeBis] = useState(true);
   const [includeRolled, setIncludeRolled] = useState(false);
   const [includePasses, setIncludePasses] = useState(false);
