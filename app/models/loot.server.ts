@@ -84,7 +84,8 @@ export async function getLootForRaid(
 }
 
 export async function getLootForPeriod(
-  daysAgo: number,
+  from: Date,
+  to: Date,
   categories?: Category[]
 ) {
   let where: Prisma.loot_historyWhereInput[] = [];
@@ -97,18 +98,12 @@ export async function getLootForPeriod(
     where.push({ item: { category: { in: categories } } });
   }
 
-  if (!daysAgo) {
-    daysAgo = 1;
-  }
-
   where.push({
     created_at: {
-      gte: new Date(
-        new Date().setDate(new Date().getDate() - daysAgo)
-      ).toISOString(),
+      gte: from,
+      lte: to,
     },
   });
-  console.log(where);
 
   const loot = await prisma.loot_history.findMany({
     where: {

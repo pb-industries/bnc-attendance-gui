@@ -6,6 +6,7 @@ import {
   redirect,
   useLoaderData,
 } from "remix";
+import { DateRangePicker } from "react-date-range";
 import { getUserId, requireUser } from "~/session.server";
 import {
   getLatestRaidId,
@@ -15,13 +16,14 @@ import {
 } from "~/models/loot.server";
 import { classNames, useOptionalUser } from "~/utils";
 import { prisma } from "~/db.server";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import Highcharts from "highcharts";
 import drilldown from "highcharts/modules/drilldown.js";
 import HighchartsReact from "highcharts-react-official";
 import LootTable from "~/components/lootTable";
-import { Switch } from "@headlessui/react";
+import { Menu, Switch, Transition } from "@headlessui/react";
 import { getMains } from "~/models/roster.server";
+import { addDays } from "date-fns";
 
 type LoaderData = {
   loot: Awaited<ReturnType<typeof getLootForRaid>>;
@@ -39,10 +41,16 @@ export const loader: LoaderFunction = async ({ request }) => {
       ? rawCategories.replace(" ", "").split(",")
       : ["bis", "rolled"]
   ) as Category[];
-  let period = parseInt(`${searchParams.get("period") ?? 0}`) ?? false;
+  let from = searchParams.get("period.from") ?? false;
+  let to = searchParams.get("period.to") ?? false;
+  console.log(from, to);
 
-  if (period) {
-    const loot = await getLootForPeriod(period, categories);
+  if (from && to) {
+    const loot = await getLootForPeriod(
+      new Date(from),
+      new Date(to),
+      categories
+    );
 
     return json<LoaderData>({
       loot,
@@ -116,8 +124,14 @@ type DrilldownDatum = {
 
 export default function () {
   const user = useOptionalUser();
+  const [ranges, setRanges] = useState([
+    {
+      key: "selection",
+      startDate: new Date(),
+      endDate: addDays(new Date(), 7),
+    },
+  ]);
   const filterFormSubmit = useRef(null);
-  const periods = [5, 10, 15, 20, 30, 60, 90];
   const [filterBy, setFilterBy] = useState<"raidId" | "period">("raidId");
   const [includeBis, setIncludeBis] = useState(true);
   const [includeRolled, setIncludeRolled] = useState(false);
@@ -140,7 +154,7 @@ export default function () {
     setTimeout(() => {
       filterFormSubmit?.current?.click();
     }, 50);
-  }, [filterBy]);
+  }, [filterBy, ranges]);
 
   useMemo(() => {
     const distribution: { [key: string]: DrilldownDatum } = {};
@@ -236,25 +250,65 @@ export default function () {
                 </select>
               </div>
             ) : (
-              <div>
-                <label
-                  htmlFor="period"
-                  className="block text-xs font-medium text-gray-700"
-                >
-                  Period
-                </label>
-                <select
-                  className="min-w-[256px]"
-                  name="period"
-                  defaultValue={`${raidId}`}
-                  onChange={(e) => filterFormSubmit?.current?.click()}
-                >
-                  {periods.map((p) => (
-                    <option key={`period-${p}`} value={`${p}`}>
-                      Last {p} days
-                    </option>
-                  ))}
-                </select>
+              <div className="relative">
+                <Menu as="div" className="flex-shrink/active k-0 relative">
+                  <Menu.Button className="flex flex-col">
+                    <label
+                      htmlFor="period"
+                      className="block text-xs font-medium text-gray-700"
+                    >
+                      Date range:
+                    </label>
+                    <div className="item-center mt-1 flex w-full min-w-[256px] gap-4 rounded-md border border-gray-300 py-2 pl-3 pr-10 text-base text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm">
+                      <span className="flex items-center gap-1">
+                        <span className="rounded-md bg-gray-100 py-1 px-2 text-xs text-gray-900">
+                          from:
+                        </span>
+                        <span>{ranges[0].startDate.toDateString()}</span>
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <span className="rounded-md bg-gray-100 py-1 px-2 text-xs text-gray-900">
+                          to:
+                        </span>
+                        <span>{ranges[0].endDate.toDateString()}</span>
+                      </span>
+                    </div>
+                    <input
+                      readOnly={true}
+                      type="hidden"
+                      name="period.from"
+                      value={`${ranges[0].startDate.toDateString()}`}
+                    />
+                    <input
+                      readOnly={true}
+                      type="hidden"
+                      name="period.to"
+                      value={ranges[0].endDate.toDateString()}
+                    />
+                  </Menu.Button>
+                  <Transition
+                    as={Fragment}
+                    enter="transition ease-out duration-100"
+                    enterFrom="transform opacity-0 scale-95"
+                    enterTo="transform opacity-100 scale-100"
+                    leave="transition ease-in duration-75"
+                    leaveFrom="transform opacity-100 scale-100"
+                    leaveTo="transform opacity-0 scale-95"
+                  >
+                    <Menu.Items className="absolute z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                      <Menu.Item>
+                        <DateRangePicker
+                          onChange={(item: any) => setRanges([item.selection])}
+                          showSelectionPreview={true}
+                          moveRangeOnFirstSelection={false}
+                          months={2}
+                          ranges={ranges}
+                          direction="horizontal"
+                        />
+                      </Menu.Item>
+                    </Menu.Items>
+                  </Transition>
+                </Menu>
               </div>
             )}
             <button ref={filterFormSubmit} className="hidden" type="submit">

@@ -441,12 +441,13 @@ const LootTable: FC<LoaderData> = ({
                 </div>
               ))}
           </div>
-          <div className="relative mt-1 min-w-[300px] rounded-md pt-4 shadow-sm">
+          <div className="relative mt-1 min-w-[360px] rounded-md pt-4 shadow-sm">
             <DebounceInput
+              autoFocus={true}
               type="text"
               name="search"
               className="z-1 block w-full rounded-md border-gray-300 pr-10 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              placeholder="Search..."
+              placeholder="Search by item or player name..."
               ref={inputRef}
               debounceTimeout={200}
               value={searchTerm}
