@@ -23,7 +23,7 @@ import HighchartsReact from "highcharts-react-official";
 import LootTable from "~/components/lootTable";
 import { Menu, Switch, Transition } from "@headlessui/react";
 import { getMains } from "~/models/roster.server";
-import { addDays } from "date-fns";
+import { addDays, subDays } from "date-fns";
 
 type LoaderData = {
   loot: Awaited<ReturnType<typeof getLootForRaid>>;
@@ -128,7 +128,7 @@ export default function () {
     {
       key: "selection",
       startDate: new Date(),
-      endDate: addDays(new Date(), 7),
+      endDate: subDays(new Date(), 7),
     },
   ]);
   const filterFormSubmit = useRef(null);
