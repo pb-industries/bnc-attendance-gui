@@ -127,8 +127,8 @@ export default function () {
   const [ranges, setRanges] = useState([
     {
       key: "selection",
-      startDate: new Date(),
-      endDate: subDays(new Date(), 7),
+      startDate: subDays(new Date(), 7),
+      endDate: new Date(),
     },
   ]);
   const filterFormSubmit = useRef(null);
