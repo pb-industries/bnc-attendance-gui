@@ -148,7 +148,9 @@ const LootTable: FC<LoaderData> = ({
         if (!includePasses && isPassToken) {
           return null;
         }
-        return activeCategory === s?.item?.category ? item : null;
+        return activeCategory === (s?.item?.category ?? "uncategorized")
+          ? item
+          : null;
       })
       .filter(Boolean);
   };
@@ -213,13 +215,15 @@ const LootTable: FC<LoaderData> = ({
     };
 
     lootRaw.forEach(({ item }) => {
-      const category = (item?.category || "uncategorized") as Category;
+      const category = (item?.category ?? "uncategorized") as Category;
       counts[category].total = (counts[category].total ?? 0) + 1;
     });
 
-    const { bis, rolled } = filterLoot(searchTerm);
+    const { bis, rolled, trash, uncategorized } = filterLoot(searchTerm);
     counts.bis.sorted = bis;
     counts.rolled.sorted = rolled;
+    counts.trash.sorted = trash;
+    counts.uncategorized.sorted = uncategorized;
 
     setCategoryCounts(counts);
   }, [lootRaw, searchTerm, activeCategory, includePasses]);
@@ -298,7 +302,7 @@ const LootTable: FC<LoaderData> = ({
 
   const Row = ({ index }) => {
     const idx = index;
-    const lh = sortedLootData[index];
+    const lh = sortedLootData[idx];
     const isPassToken = `${lh?.item_id}` === "756381770069475329";
     if (isPassToken) {
       lh.category = "bis";
