@@ -89,6 +89,10 @@ export async function getLootForPeriod(
   categories?: Category[]
 ) {
   let where: Prisma.loot_historyWhereInput[] = [];
+  
+  // Ensure our range is between start and end of day
+  start.setUTCHours(0, 0, 0, 0);
+  end.setUTCHours(23, 59, 59, 999);
 
   if (!categories) {
     categories = ["bis"];
