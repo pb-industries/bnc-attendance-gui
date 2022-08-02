@@ -71,8 +71,8 @@ export default function IndexRoute() {
     const categories: string[] = [];
 
     filteredMains.forEach((main) => {
-      categories.push(main.name);
-      if (main.attendance_60) {
+      if (main.attendance_60 > 0) {
+        categories.push(main.name);
         attendance.attendance_30.data.push(main.attendance_30 ?? 0);
         attendance.attendance_60.data.push(main.attendance_60 ?? 0);
         attendance.attendance_90.data.push(main.attendance_90 ?? 0);
