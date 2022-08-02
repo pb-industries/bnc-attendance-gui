@@ -84,7 +84,8 @@ export default function IndexRoute() {
     };
     setOptions({
       ...options,
-      series: Object.values(attendance),
+      // Only show members > 60 day attendance
+      series: Object.values(attendance).filter(a => a.data[1] > 0),
       xAxis,
     });
   }, [mains]);
