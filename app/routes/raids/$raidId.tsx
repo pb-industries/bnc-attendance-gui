@@ -14,7 +14,7 @@ import RequestTicksModal from "~/components/raids/requestTicksModal";
 import GenerateLottoRangeModal from "~/components/raids/generateLottoRangeModal";
 import { getMains, getMainsAtTick } from "~/models/roster.server";
 import { formatDate, getRollRange, useOptionalUser } from "~/utils";
-import { requireUser } from "~/session.server";
+import { getUser, requireUser } from "~/session.server";
 import { player } from "@prisma/client";
 
 type LoaderData = {
@@ -75,7 +75,7 @@ export const action: ActionFunction = async ({ request }) => {
 };
 
 export const loader: LoaderFunction = async ({ request, params }) => {
-  const user = await requireUser(request);
+  const user = await getUser(request);
   const raid = await getRaid({ id: (params.raidId ?? 0) as unknown as number });
   const raidTicks = await getRaidTicks(params.raidId ?? 0);
   return json<LoaderData>({
@@ -158,9 +158,7 @@ export default function raidIdPage() {
       };
       Object.keys(attendeeData.ticks).forEach((tick) => {
         const tickData = attendeeData.ticks[tick];
-        if (tickData.length > 0) {
-          seriesDatum.data.push(tickData.length);
-        }
+        seriesDatum.data.push(tickData.length);
       });
       seriesData.push(seriesDatum);
     });
@@ -229,8 +227,7 @@ export default function raidIdPage() {
             <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl">
               Raid: {raid.name}
             </h2>
-            {raid.isLive &&
-            ["officer", "admin"].includes(user?.role ?? "guest") ? (
+            {raid.isLive ? (
               <div className="flex items-center">
                 <button
                   onClick={onCopyText}
@@ -280,8 +277,8 @@ export default function raidIdPage() {
             )}
           </div>
         </div>
-        {user ? (
-          <div className="mt-4 flex flex-shrink-0 md:mt-0 md:ml-4">
+        <div className="mt-4 flex flex-shrink-0 md:mt-0 md:ml-4">
+          {user ? (
             <button
               type="button"
               className="ml-3 inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
@@ -289,17 +286,15 @@ export default function raidIdPage() {
             >
               Request missing ticks
             </button>
-            {["officer", "admin"].includes(user?.role ?? "guest") ? (
-              <button
-                type="button"
-                className="ml-3 inline-flex items-center rounded-md border border-transparent bg-orange-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                onClick={() => setIsGenerateLottoRangeModalOpen(true)}
-              >
-                Generate Custom Range
-              </button>
-            ) : null}
-          </div>
-        ) : null}
+          ) : null}
+          <button
+            type="button"
+            className="ml-3 inline-flex items-center rounded-md border border-transparent bg-orange-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            onClick={() => setIsGenerateLottoRangeModalOpen(true)}
+          >
+            Generate Lotto Range
+          </button>
+        </div>
       </div>
 
       <div
@@ -349,7 +344,9 @@ export default function raidIdPage() {
                 dataLabels: {
                   enabled: true,
                   formatter: function () {
-                    return `<span class="capitalize">${this.series.name}</span>`;
+                    if (this.point.y > 0) {
+                      return `<span class="capitalize">${this.series.name}</span>`;
+                    }
                   },
                 },
               },

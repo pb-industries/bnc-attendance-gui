@@ -10,6 +10,10 @@ export async function getMains() {
       player_alt_playerToplayer_alt_alt_id: true,
       player_alt_playerToplayer_alt_player_id: true,
     },
+    where: {
+      NOT: [{ guild_id: null }],
+      user: { some: { NOT: [{ player_id: undefined }] } },
+    },
     orderBy: {
       name: "asc",
     },
