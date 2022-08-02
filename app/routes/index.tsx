@@ -72,20 +72,23 @@ export default function IndexRoute() {
 
     filteredMains.forEach((main) => {
       categories.push(main.name);
-      attendance.attendance_30.data.push(main.attendance_30 ?? 0);
-      attendance.attendance_60.data.push(main.attendance_60 ?? 0);
-      attendance.attendance_90.data.push(main.attendance_90 ?? 0);
-      attendance.attendance_life.data.push(main.attendance_life ?? 0);
+      if (main.attendance_60) {
+        attendance.attendance_30.data.push(main.attendance_30 ?? 0);
+        attendance.attendance_60.data.push(main.attendance_60 ?? 0);
+        attendance.attendance_90.data.push(main.attendance_90 ?? 0);
+        attendance.attendance_life.data.push(main.attendance_life ?? 0);
+      }
     });
 
     const xAxis: { categories: string[]; crosshair: boolean } = {
       categories,
       crosshair: true,
     };
+
     setOptions({
       ...options,
       // Only show members > 60 day attendance
-      series: Object.values(attendance).filter(a => a.data[1] > 0),
+      series: Object.values(attendance),
       xAxis,
     });
   }, [mains]);
