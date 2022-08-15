@@ -53,16 +53,22 @@ export async function getMainsAtTick(raidId: bigint, tick?: bigint) {
     },
   });
 
-  const mainIds = attendees
-    .filter((raidTick) => {
-      // Get the optional name/id of the main
-      const mainId =
-        raidTick.player.player_alt_playerToplayer_alt_alt_id?.[0]?.player_id;
-      const playerId = raidTick.player_id;
+  const mainIds = Array.from(
+    new Set(
+      attendees.map((raidTick) => {
+        // Get the optional name/id of the main
+        const mainId =
+          raidTick.player.player_alt_playerToplayer_alt_alt_id?.[0]?.player_id;
+        const playerId = raidTick.player_id;
 
-      return !mainId || mainId === playerId;
-    })
-    .map((p) => p.player_id);
+        if (!mainId) {
+          return playerId;
+        }
+
+        return mainId;
+      })
+    )
+  );
 
   const mAtTick = prisma.player.findMany({
     where: { id: { in: mainIds } },
