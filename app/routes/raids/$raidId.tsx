@@ -3,6 +3,7 @@ import { json } from "@remix-run/node";
 import type { LoaderFunction, ActionFunction } from "@remix-run/node";
 import {
   createRaidTickRequest,
+  deleteRaidTicks,
   getRaid,
   getRaidTicks,
 } from "~/models/raid.server";
@@ -11,6 +12,7 @@ import { useEffect, useRef, useState } from "react";
 import HighchartsReact from "highcharts-react-official";
 import Highcharts from "highcharts";
 import RequestTicksModal from "~/components/raids/requestTicksModal";
+import RemoveTicksModal from "~/components/raids/removeTicksModal";
 import GenerateLottoRangeModal from "~/components/raids/generateLottoRangeModal";
 import { getMains, getMainsAtTick } from "~/models/roster.server";
 import { formatDate, getRollRange, useOptionalUser } from "~/utils";
@@ -63,7 +65,11 @@ export const action: ActionFunction = async ({ request }) => {
     });
   }
 
-  await createRaidTickRequest(BigInt(playerId), BigInt(raidId), ticks);
+  if (request.method !== "DELETE") {
+    await createRaidTickRequest(BigInt(playerId), BigInt(raidId), ticks);
+  } else {
+    await deleteRaidTicks(BigInt(playerId), BigInt(raidId), ticks);
+  }
 
   return json({
     status: 200,
@@ -93,6 +99,7 @@ export default function raidIdPage() {
   const refreshRef = useRef<HTMLButtonElement>();
   const { raidTicks, raid, mains, player } = useLoaderData<LoaderData>();
   const [isRequestTicksModalOpen, setIsRequestTicksModalOpen] = useState(false);
+  const [isRemoveTicksModalOpen, setIsRemoveTicksModalOpen] = useState(false);
   const [isGenerateLottoRangeModalOpen, setIsGenerateLottoRangeModalOpen] =
     useState(false);
   const [options, setOptions] = useState<HighchartsData>({
@@ -278,6 +285,15 @@ export default function raidIdPage() {
           </div>
         </div>
         <div className="mt-4 flex flex-shrink-0 md:mt-0 md:ml-4">
+          {["admin", "officer"].includes(user?.role ?? "guest") ? (
+            <button
+              type="button"
+              className="ml-3 inline-flex items-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+              onClick={() => setIsRemoveTicksModalOpen(true)}
+            >
+              Remove ticks
+            </button>
+          ) : null}
           {user ? (
             <button
               type="button"
@@ -367,6 +383,15 @@ export default function raidIdPage() {
             ? mains
             : [player]
         }
+        selectedPlayerId={user?.player_id}
+        totalTicks={raid.total_ticks}
+        raidId={raid.id!}
+      />
+
+      <RemoveTicksModal
+        open={isRemoveTicksModalOpen}
+        setOpen={setIsRemoveTicksModalOpen}
+        players={mains}
         selectedPlayerId={user?.player_id}
         totalTicks={raid.total_ticks}
         raidId={raid.id!}

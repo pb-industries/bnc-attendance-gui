@@ -1,6 +1,7 @@
 import type { player, player_alt, raid } from "@prisma/client";
 
 import { prisma } from "~/db.server";
+import { getBoxes } from "./roster.server";
 
 export type { raid } from "@prisma/client";
 
@@ -171,6 +172,38 @@ export function deleteRaid({ id }: Pick<raid, "id">) {
   return prisma.raid.deleteMany({
     where: { id },
   });
+}
+
+export async function deleteRaidTicks(
+  playerId: bigint,
+  raidId: bigint,
+  raidHours: bigint[]
+): Promise<boolean> {
+  if (!playerId || !raidId || raidHours.length === 0) {
+    return false;
+  }
+
+  const boxes = await getBoxes(playerId);
+  let playerIds = boxes?.map((box) => box.id!) ?? [];
+  playerIds.push(playerId);
+
+  if (playerIds.length === 0) {
+    return false;
+  }
+
+  try {
+    await prisma.player_raid.deleteMany({
+      where: {
+        player_id: { in: playerIds },
+        raid_id: raidId,
+        raid_hour: { in: raidHours },
+      },
+    });
+  } catch {
+    console.log("nope!");
+  }
+
+  return true;
 }
 
 export async function createRaidTickRequest(

@@ -13,7 +13,7 @@ interface HandleDeleteModalProps {
   totalTicks: number;
 }
 
-const RequestTicksModal: FC<HandleDeleteModalProps> = ({
+const RemoveTicksModal: FC<HandleDeleteModalProps> = ({
   players,
   totalTicks,
   selectedPlayerId,
@@ -85,17 +85,22 @@ const RequestTicksModal: FC<HandleDeleteModalProps> = ({
                       as="h3"
                       className="text-lg font-medium capitalize leading-6 text-gray-900"
                     >
-                      Request missing ticks
+                      Remove ticks
                     </Dialog.Title>
                     <p className="mt-2 text-sm text-gray-500">
-                      If you think you're missing any ticks, you can request
-                      them here, an officer can then approve them if they
-                      believe it to be correct
+                      Removing ticks from a player is a permanent action and
+                      will impact their attendance, please make sure you are
+                      only removing ticks from a player if you're certain they
+                      weren't there.
+                    </p>
+                    <p className="mt-2 text-sm text-gray-500">
+                      Ticks can only be restored through the "request ticks"
+                      process which must be approved by an officer.
                     </p>
                   </div>
                 </div>
               </div>
-              <Form onSubmit={() => setOpen(false)} method="post">
+              <Form onSubmit={() => setOpen(false)} method="delete">
                 <div className="flex flex-col items-center gap-4 p-4">
                   <input type="hidden" name="raid.id" value={`${raidId}`} />
                   {players.length > 1 ? (
@@ -122,9 +127,9 @@ const RequestTicksModal: FC<HandleDeleteModalProps> = ({
                 <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
                   <button
                     type="submit"
-                    className="inline-flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
+                    className="inline-flex w-full justify-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
                   >
-                    Make Request
+                    Confirm
                   </button>
                   <button
                     type="button"
@@ -144,4 +149,4 @@ const RequestTicksModal: FC<HandleDeleteModalProps> = ({
   );
 };
 
-export default RequestTicksModal;
+export default RemoveTicksModal;
