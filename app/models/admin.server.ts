@@ -71,7 +71,7 @@ export async function approveRaidTick(
       },
     });
     await fixTickTimes();
-    calculateAttendance();
+    await calculateAttendance();
   }
 }
 

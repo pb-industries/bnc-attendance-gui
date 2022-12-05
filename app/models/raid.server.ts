@@ -1,6 +1,7 @@
 import type { player, player_alt, raid } from "@prisma/client";
 
 import { prisma } from "~/db.server";
+import { calculateAttendance } from "./api.server";
 import { getBoxes } from "./roster.server";
 
 export type { raid } from "@prisma/client";
@@ -202,6 +203,8 @@ export async function deleteRaidTicks(
   } catch {
     console.log("nope!");
   }
+
+  await calculateAttendance();
 
   return true;
 }
