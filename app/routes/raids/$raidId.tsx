@@ -67,7 +67,10 @@ export const action: ActionFunction = async ({ request }) => {
 
   if (request.method !== "DELETE") {
     await createRaidTickRequest(BigInt(playerId), BigInt(raidId), ticks);
-  } else {
+  } else if (
+    request.method === "DELETE" &&
+    ["admin"].includes(user?.role ?? "guest")
+  ) {
     await deleteRaidTicks(BigInt(playerId), BigInt(raidId), ticks);
   }
 
