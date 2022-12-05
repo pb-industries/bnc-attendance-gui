@@ -288,7 +288,7 @@ export default function raidIdPage() {
           </div>
         </div>
         <div className="mt-4 flex flex-shrink-0 md:mt-0 md:ml-4">
-          {["admin", "officer"].includes(user?.role ?? "guest") ? (
+          {["admin"].includes(user?.role ?? "guest") ? (
             <button
               type="button"
               className="ml-3 inline-flex items-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
