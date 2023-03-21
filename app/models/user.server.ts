@@ -111,7 +111,17 @@ export async function createUser(
 }
 
 export async function deleteUserById(id: user["id"]) {
-  return prisma.user.delete({ where: { id } });
+    return await prisma.player.update({
+      data: { deleted_at: new Date() },
+      where: { id },
+    });
+}
+
+export async function undeleteUserById(id: user["id"]) {
+    return await prisma.player.update({
+      data: { deleted_at: null },
+      where: { id },
+    });
 }
 
 export async function verifyLogin(

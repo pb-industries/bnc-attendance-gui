@@ -4,7 +4,7 @@ import { requireUser } from "~/session.server";
 
 export type { raid } from "@prisma/client";
 
-export async function getMains() {
+export async function getMains(exclude_deleted = true) {
   const players = await prisma.player.findMany({
     include: {
       player_alt_playerToplayer_alt_alt_id: true,
@@ -22,6 +22,9 @@ export async function getMains() {
   return players.filter((player) => {
     // Get the optional name/id of the main
     const mainId = player.player_alt_playerToplayer_alt_alt_id?.[0]?.player_id;
+    if (exclude_deleted && player.deleted_at) {
+      return false
+    }
 
     return !mainId || mainId === player.id;
   });

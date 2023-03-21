@@ -1,10 +1,14 @@
-import { LoaderFunction } from "@remix-run/server-runtime";
+import { ActionFunction, LoaderFunction } from "@remix-run/server-runtime";
 import { json } from "@remix-run/node";
-import { Link, useLoaderData } from "remix";
+import { Form, Link, useLoaderData } from "remix";
 import { getMains } from "~/models/roster.server";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 import { useEffect, useMemo, useState } from "react";
+import { useOptionalUser } from "~/utils";
+import { CheckIcon, PlusIcon, TrashIcon } from "@heroicons/react/outline";
+import { getUser, requireUser } from "~/session.server";
+import { deleteUserById, undeleteUserById } from "~/models/user.server";
 
 type LoaderData = {
   mains: Awaited<ReturnType<typeof getMains>>;
@@ -16,12 +20,40 @@ type HighchartsData = {
   series: { name: string; data: number[] }[];
 };
 // import { useOptionalUser } from "~/utils";
-export const loader: LoaderFunction = async () => {
-  const mains = await getMains();
+export const loader: LoaderFunction = async ({ request }) => {
+  const user = await getUser(request)
+  const isAdmin = (['admin', 'officer'].includes(user?.role ?? 'guest'))
+  const mains = await getMains(isAdmin ? false : true);
+  return json<LoaderData>({ mains });
+};
+
+export const action: ActionFunction = async ({ request, params }) => {
+  const user = requireUser(request);
+  const formData = await request.formData();
+
+  const playerId = BigInt(`${formData.get("player_id") ?? 0}`);
+  const type = formData.get("type");
+
+  if (!playerId || typeof type !== "string") {
+    return null;
+  }
+
+  if (!user) {
+    return null;
+  }
+
+  if (type === 'delete_player') {
+    await deleteUserById(playerId)
+  } else if (type === 'undelete_player') {
+    await undeleteUserById(playerId)
+  }
+
+  const mains = await getMains(false);
   return json<LoaderData>({ mains });
 };
 
 export default function IndexRoute() {
+  const user = useOptionalUser();
   const { mains } = useLoaderData<LoaderData>();
   const [sortConfig, setSortConfig] = useState<{
     key: string;
@@ -192,11 +224,13 @@ export default function IndexRoute() {
                 Attendance life{renderSortIndicator("attendance_life")}
               </button>
             </th>
+        {["admin", "officer"].includes(user?.role ?? "guest") ? (<th scope="col" className="px-3 py-3.5 text-right text-sm font-semibold text-gray-900">Actions</th>
+        ) : null}
           </tr>
         </thead>
         <tbody className="bg-white">
           {sortedMainData.map((main) => (
-            <tr key={main.name}>
+            <tr key={main.name} className={main.deleted_at ? 'opacity-50' : ''}>
               <td className="whitespace-nowrap px-3 py-4 text-sm capitalize text-gray-500">
                 <img
                   className="mr-2 inline-block h-6 w-6 rounded-full"
@@ -218,6 +252,22 @@ export default function IndexRoute() {
               <td className="whitespace-nowrap px-3 py-4 text-right text-sm text-gray-500">
                 {main.attendance_life ?? 0}%
               </td>
+              {["admin", "officer"].includes(user?.role ?? "guest") ? (
+                <td className="whitespace-nowrap px-3 py-4 text-right text-sm text-gray-500">
+                  <Form
+                    method="post"
+                  >
+                    <input type="hidden" name="type" value={main.deleted_at ? 'undelete_player' : "delete_player"} />
+                    <input type="hidden" name="player_id" value={`${main.id}`} />
+                    <button
+                      type="submit"
+                      className={`h-7 w-7 p-1 rounded-md text-white ${main.deleted_at ? 'bg-black hover:bg-gray-900' : 'bg-red-500 hover:bg-red-600'}`}
+                    >
+                      {main.deleted_at ? <PlusIcon /> : <TrashIcon />}
+                    </button>
+                  </Form>
+                </td>
+              ) : null}
             </tr>
           ))}
         </tbody>
