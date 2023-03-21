@@ -6,7 +6,7 @@ import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 import { useEffect, useMemo, useState } from "react";
 import { useOptionalUser } from "~/utils";
-import { CheckIcon, PlusIcon, TrashIcon } from "@heroicons/react/outline";
+import { CheckIcon, EyeIcon, EyeOffIcon, PlusIcon, TrashIcon } from "@heroicons/react/outline";
 import { getUser, requireUser } from "~/session.server";
 import { deleteUserById, undeleteUserById } from "~/models/user.server";
 
@@ -263,7 +263,7 @@ export default function IndexRoute() {
                       type="submit"
                       className={`h-7 w-7 p-1 rounded-md text-white ${main.deleted_at ? 'bg-black hover:bg-gray-900' : 'bg-red-500 hover:bg-red-600'}`}
                     >
-                      {main.deleted_at ? <PlusIcon /> : <TrashIcon />}
+                      {main.deleted_at ? <EyeIcon /> : <EyeOffIcon />}
                     </button>
                   </Form>
                 </td>
