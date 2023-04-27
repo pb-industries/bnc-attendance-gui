@@ -208,6 +208,13 @@ export type PlayerWithBoxes = player & {
   player_alt_playerToplayer_alt_player_id: player_alt[];
 };
 
+export type Attendee = {
+  player_id: string,
+  name: string,
+  awarded_tickets: number,
+  split_amount?: number
+}
+
 export function getRollRange(
   players: Set<PlayerWithBoxes>,
   debug: boolean = false
@@ -244,6 +251,13 @@ export function getRollRange(
   }
 
   return ranges.map((r) => `${r.p.name} ${r.lower}-${r.upper}`).join(" | ");
+}
+
+export function getCurrencySplit(currency_to_split: number, players: Attendee[], total_tickets: number) {
+  return players.map((p) => {
+    p.split_amount = Math.floor(currency_to_split * (total_tickets > 0 ? (p.awarded_tickets / total_tickets) : 0))
+    return p
+  })
 }
 
 export function classNames(...classes: string[]) {

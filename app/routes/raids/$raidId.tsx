@@ -5,6 +5,7 @@ import {
   createRaidTickRequest,
   deleteRaidTicks,
   getRaid,
+  getCurrencySplitMeta,
   getRaidTicks,
 } from "~/models/raid.server";
 import { ChevronRightIcon, CheckIcon, EyeIcon } from "@heroicons/react/outline";
@@ -18,12 +19,14 @@ import { getMains, getMainsAtTick } from "~/models/roster.server";
 import { formatDate, getRollRange, useOptionalUser } from "~/utils";
 import { getUser, requireUser } from "~/session.server";
 import { player } from "@prisma/client";
+import GenerateCurrencySplitModal from "~/components/raids/generateCurrencySplitModal";
 
 type LoaderData = {
   raid: Awaited<ReturnType<typeof getRaid>>;
   mains: Awaited<ReturnType<typeof getMains>> | player[];
   player: player;
   raidTicks: Awaited<ReturnType<typeof getRaidTicks>>;
+  attendees: Awaited<ReturnType<typeof getCurrencySplitMeta>>
 };
 
 type HighchartsData = {
@@ -87,10 +90,12 @@ export const loader: LoaderFunction = async ({ request, params }) => {
   const user = await getUser(request);
   const raid = await getRaid({ id: (params.raidId ?? 0) as unknown as number });
   const raidTicks = await getRaidTicks(params.raidId ?? 0);
+  const attendees = await getCurrencySplitMeta(params.raidId ?? 0);
   return json<LoaderData>({
     raid,
     raidTicks,
     mains: await getMains(),
+    attendees,
     player: user?.player,
   });
 };
@@ -100,11 +105,15 @@ export default function raidIdPage() {
   const [isCopied, setIsCopied] = useState(false);
   const [isDebugCopied, setIsDebugCopied] = useState(false);
   const refreshRef = useRef<HTMLButtonElement>();
-  const { raidTicks, raid, mains, player } = useLoaderData<LoaderData>();
+  const { raidTicks, raid, mains, player, attendees } = useLoaderData<LoaderData>();
   const [isRequestTicksModalOpen, setIsRequestTicksModalOpen] = useState(false);
   const [isRemoveTicksModalOpen, setIsRemoveTicksModalOpen] = useState(false);
   const [isGenerateLottoRangeModalOpen, setIsGenerateLottoRangeModalOpen] =
     useState(false);
+  const [
+    isGenerateCurrencySplitModalOpen,
+    setIsGenerateCurrencySplitModalOpen,
+  ] = useState(false);
   const [options, setOptions] = useState<HighchartsData>({
     title: { text: "Attendance and box distribution" },
     xAxis: { categories: [], crosshair: true },
@@ -138,7 +147,10 @@ export default function raidIdPage() {
   };
 
   useEffect(() => {
-    let interval = setInterval(() => refreshRef?.current?.click(), 60000);
+    console.log(attendees)
+    let interval = setInterval(() => {
+      // refreshRef?.current?.click()
+    }, 60000);
     return () => clearInterval(interval);
   }, [user]);
 
@@ -313,6 +325,13 @@ export default function raidIdPage() {
           >
             Generate Lotto Range
           </button>
+          <button
+            type="button"
+            className="ml-3 inline-flex items-center rounded-md border border-transparent bg-yellow-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            onClick={() => setIsGenerateCurrencySplitModalOpen(true)}
+          >
+            Generate Currency Split
+          </button>
         </div>
       </div>
 
@@ -405,6 +424,13 @@ export default function raidIdPage() {
         setOpen={setIsGenerateLottoRangeModalOpen}
         players={mains}
       />
+
+      <GenerateCurrencySplitModal
+        open={isGenerateCurrencySplitModalOpen}
+        setOpen={setIsGenerateCurrencySplitModalOpen}
+        attendees={attendees}
+      />
+
       <Form className="hidden" method="get">
         <button ref={refreshRef} type="submit">
           Reload

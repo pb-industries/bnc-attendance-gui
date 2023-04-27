@@ -95,6 +95,45 @@ export async function getRaid({ id }: Pick<raid, "id">) {
   };
 }
 
+export async function getCurrencySplitMeta(raidId: bigint)
+{
+  const data = await prisma.$queryRawUnsafe(
+    `
+    SELECT
+      DISTINCT
+      p.name,
+      p.class,
+      pr.player_id AS player_id,
+      p.total_tickets,
+      rt.total_ticks,
+      prt.attended_ticks,
+      floor((p.total_tickets / total_ticks) * attended_ticks) as awarded_tickets
+    FROM player_raid pr
+    INNER JOIN player_alt pa ON pa.player_id = pr.player_id
+    INNER JOIN player p ON pa.player_id = p.id
+    INNER JOIN (
+      SELECT pr.raid_id, COUNT(DISTINCT pr.raid_hour) AS total_ticks
+      FROM player_raid pr
+      WHERE pr.raid_id = ${BigInt(raidId).toString()}
+      GROUP BY pr.raid_id
+    ) rt ON rt.raid_id = pr.raid_id
+    INNER JOIN (
+      SELECT pr.player_id, pr.raid_id, COUNT(DISTINCT pr.raid_hour) AS attended_ticks
+      FROM player_raid pr
+      WHERE pr.raid_id = ${BigInt(raidId).toString()}
+      GROUP BY pr.player_id, pr.raid_id
+    ) prt ON prt.raid_id = pr.raid_id AND prt.player_id = pr.player_id
+    WHERE pr.raid_id = ${BigInt(raidId).toString()}
+  `)
+
+  const total_tickets = data.reduce((c, d) => c + d.awarded_tickets, 0)
+  const split_info = data.map(d => {
+    return { player_id, name, awarded_tickets, class: d.class } = d
+  })
+
+  return { total_tickets, split_info }
+}
+
 export async function getRaidTicks(raidId: bigint) {
   const ticks = (await prisma.$queryRawUnsafe(
     `
