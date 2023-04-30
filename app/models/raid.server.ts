@@ -97,32 +97,37 @@ export async function getRaid({ id }: Pick<raid, "id">) {
 
 export async function getCurrencySplitMeta(raidId: bigint)
 {
+  const mainIds = (await getMainIds(raidId)).join(',')
   const data = await prisma.$queryRawUnsafe(
     `
     SELECT
       DISTINCT
       p.name,
       p.class,
-      pr.player_id AS player_id,
+      pr.main_id AS player_id,
       p.total_tickets,
       rt.total_ticks,
-      prt.attended_ticks,
+      pr.attended_ticks,
       floor((p.total_tickets / total_ticks) * attended_ticks) as awarded_tickets
-    FROM player_raid pr
-    INNER JOIN player_alt pa ON pa.player_id = pr.player_id
-    INNER JOIN player p ON pa.player_id = p.id
+    FROM (
+      SELECT
+      		if (pa.alt_id = pr.player_id, pa.player_id, pr.player_id) AS main_id,
+      		COUNT(DISTINCT pr.raid_hour) AS attended_ticks,
+          pr.raid_id
+      	FROM player_raid pr
+      	LEFT JOIN player_alt pa ON pa.alt_id = pr.player_id
+        LEFT JOIN player p ON pa.player_id = p.id OR pr.player_id = p.id
+      	WHERE p.id IN (${mainIds})
+        AND pr.raid_id = ${BigInt(raidId).toString()}
+      	GROUP BY pr.raid_id, main_id
+    ) pr
     INNER JOIN (
       SELECT pr.raid_id, COUNT(DISTINCT pr.raid_hour) AS total_ticks
       FROM player_raid pr
       WHERE pr.raid_id = ${BigInt(raidId).toString()}
       GROUP BY pr.raid_id
-    ) rt ON rt.raid_id = pr.raid_id
-    INNER JOIN (
-      SELECT pr.player_id, pr.raid_id, COUNT(DISTINCT pr.raid_hour) AS attended_ticks
-      FROM player_raid pr
-      WHERE pr.raid_id = ${BigInt(raidId).toString()}
-      GROUP BY pr.player_id, pr.raid_id
-    ) prt ON prt.raid_id = pr.raid_id AND prt.player_id = pr.player_id
+    ) rt ON rt.raid_id = ${BigInt(raidId).toString()}
+    INNER JOIN player p ON pr.main_id = p.id
     WHERE pr.raid_id = ${BigInt(raidId).toString()}
   `)
 
@@ -156,6 +161,40 @@ interface RaidWithTotals extends raid {
   total_ticks: number;
   total_mains: number;
   attended_ticks: number;
+}
+
+async function getMainIds(raidId: bigint)
+{
+  const attendees = await prisma.player_raid.findMany({
+    where: {
+      AND: [{ raid_id: BigInt(raidId) }],
+    },
+    include: {
+      player: {
+        include: {
+          player_alt_playerToplayer_alt_alt_id: true,
+        },
+      },
+    },
+  });
+
+  return Array.from(
+    new Set(
+      attendees.map((raidTick) => {
+        // Get the optional name/id of the main
+        const mainId =
+          raidTick.player.player_alt_playerToplayer_alt_alt_id?.[0]?.player_id;
+        const playerId = raidTick.player_id;
+
+        if (!mainId) {
+          return playerId;
+        }
+
+        return mainId;
+      })
+    )
+  );
+
 }
 
 export async function getRaids({
