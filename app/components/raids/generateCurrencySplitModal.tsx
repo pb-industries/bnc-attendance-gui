@@ -48,7 +48,7 @@ const GenerateCurrencySplitModal: FC<HandleLottoRangeModalProps> = ({
       const tickets = Array.from(selectedAttendees).reduce((c, d) => c + d.awarded_tickets, 0)
       const splitAmount = parseInt(splitAmountRef.current?.value ?? '0')
       const split = getCurrencySplit(splitAmount, Array.from(selectedAttendees), tickets)
-      setCopyText(`${tickets} units split: ${split.map(d => `${d.name} received ${d.split_amount}`).join(' | ')}`)
+      setCopyText(`${splitAmount} units split: ${split.map(d => `${d.name} received ${d.split_amount}`).join(' | ')}`)
       setRange(split)
     }
   }, [showRange]);

@@ -105,10 +105,10 @@ export async function getCurrencySplitMeta(raidId: bigint)
       p.name,
       p.class,
       pr.main_id AS player_id,
-      p.total_tickets,
+      p.base_tickets AS total_tickets,
       rt.total_ticks,
       pr.attended_ticks,
-      floor((p.total_tickets / total_ticks) * attended_ticks) as awarded_tickets
+      floor((p.base_tickets / total_ticks) * attended_ticks) as awarded_tickets
     FROM (
       SELECT
       		if (pa.alt_id = pr.player_id, pa.player_id, pr.player_id) AS main_id,
