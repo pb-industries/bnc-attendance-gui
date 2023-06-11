@@ -1,5 +1,7 @@
 import {
+  CheckCircleIcon,
   CubeIcon,
+  FireIcon,
   ShieldCheckIcon,
   TrashIcon,
   XIcon,
@@ -101,6 +103,7 @@ const LootTable: FC<LoaderData> = ({
   hideEmpty,
   includePasses,
   withRaid,
+  mains
 }) => {
   const [categories] = useState<Category[]>([
     "bis",
@@ -336,9 +339,23 @@ const LootTable: FC<LoaderData> = ({
           </span>
         </td>
         <td className="hidden whitespace-nowrap py-4 pr-3 text-sm font-medium capitalize text-gray-900 sm:table-cell">
+        {["admin", "officer"].includes(user?.role ?? "guest") ? (
+          <Form className='flex gap-2' method="post">
+            <input type='hidden' name='line_id' value={lh?.id ?? 0} />
+            <input type='hidden' name='category' value='change_player' />
+            <select className='h-8 text-sm px-2 py-0 max-w-28 w-28' name='player_id'>
+              <option value={lh?.looted_by_id}>{lh?.looted_by_name}</option>
+              {mains?.map(m => <option className={m.id === lh.looted_by_id ? "hidden" : ""} value={m.id}>{m.name}</option>)}
+            </select>
+            <button toolTip='save changes' type='submit'><CheckCircleIcon className='p-1 w-8 h-8 bg-green-500 text-white hover:bg-green-600' /></button>
+          </Form>
+
+        ): (
           <Link className="text-blue-500" to={`/players/${lh?.looted_by_id}`}>
             {lh?.looted_by_name}
           </Link>
+
+        )}
         </td>
         <td
           className={`${
@@ -406,9 +423,25 @@ const LootTable: FC<LoaderData> = ({
               <input type="hidden" name="item_id" value={`${lh.item_id}`} />
               <button
                 type="submit"
-                className="h-8 w-8 rounded-sm bg-red-500 p-1 text-white hover:bg-red-600"
+                className="h-8 w-8 rounded-sm bg-gray-500 p-1 text-white hover:bg-gray-600"
               >
                 <TrashIcon />
+              </button>
+            </Form>
+            <Form
+              method="post"
+              onSubmit={(e) => {
+                removeItem(idx);
+              }}
+            >
+              <input type="hidden" name="category" value="delete" />
+              <input type="hidden" name="line_id" value={`${lh.id}`} />
+              <button
+                type="submit"
+                className="ml-4 h-8 w-8 rounded-sm bg-red-500 p-1 text-white hover:bg-red-600"
+              >
+                <XIcon />
+                OKI
               </button>
             </Form>
           </td>
@@ -475,7 +508,7 @@ const LootTable: FC<LoaderData> = ({
           </div>
         </div>
         <VirtualTable
-          height={500}
+          height={2000}
           width="100%"
           itemCount={sortedLootData.length}
           itemSize={64.57}

@@ -5,8 +5,9 @@ import { useOptionalUser } from "~/utils";
 import { prisma } from "~/db.server";
 import { useState } from "react";
 import LootTable from "~/components/lootTable";
+import { getMains } from "~/models/roster.server";
 
-type LoaderData = { loot: Awaited<ReturnType<typeof getLootForRaid>> };
+type LoaderData = { loot: Awaited<ReturnType<typeof getLootForRaid>>, mains: Awaited<ReturnType<typeof getMains>> };
 
 export const loader: LoaderFunction = async ({ request, params }) => {
   const loot = await getLootForRaid(
@@ -14,8 +15,9 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     undefined,
     []
   );
+  const mains = await getMains(true);
 
-  return json<LoaderData>({ loot });
+  return json<LoaderData>({ loot, mains });
 };
 
 export const action: ActionFunction = async ({ request, params }) => {
@@ -24,6 +26,36 @@ export const action: ActionFunction = async ({ request, params }) => {
 
   const itemId = BigInt(`${formData.get("item_id") ?? 0}`);
   const category = formData.get("category");
+  if (category === "delete") {
+    const lootId = BigInt(`${formData.get("line_id") ?? 0}`);
+    if (!lootId) {
+      return null;
+    }
+    await prisma.loot_history.delete({
+      where: {
+        id: lootId,
+      },
+    });
+    return null;
+  }
+
+  console.log('cat is', category)
+  if (category === 'change_player') {
+    const lootId   = BigInt(`${formData.get("line_id") ?? 0}`);
+    const playerId = BigInt(`${formData.get("player_id") ?? 0}`);
+    console.log('changing player')
+
+    if (!lootId || !playerId) {
+      return null
+    }
+
+    await prisma.loot_history.update({
+      where: { id: lootId },
+      data: {
+        looted_by_id: playerId
+      },
+    });
+  }
 
   if (!itemId || typeof category !== "string") {
     return null;
@@ -52,7 +84,7 @@ export const action: ActionFunction = async ({ request, params }) => {
 export default function () {
   const user = useOptionalUser();
   const [searchTerm, setSearchTerm] = useState("");
-  const { loot: lootRaw } = useLoaderData<LoaderData>();
+  const { loot: lootRaw, mains } = useLoaderData<LoaderData>();
 
   return (
     <div className="grid min-h-[500px] grid-cols-12 gap-8">
@@ -65,6 +97,7 @@ export default function () {
             hideEmpty: true,
             includePasses: true,
             withRaid: false,
+            mains
           }}
         />
       </div>
