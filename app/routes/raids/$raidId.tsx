@@ -20,6 +20,7 @@ import { formatDate, getRollRange, useOptionalUser } from "~/utils";
 import { getUser, requireUser } from "~/session.server";
 import { player } from "@prisma/client";
 import GenerateCurrencySplitModal from "~/components/raids/generateCurrencySplitModal";
+import { AUDIT_TICK_REMOVED, AUDIT_TICK_REQUESTED, createAuditLog } from "~/models/admin.server";
 
 type LoaderData = {
   raid: Awaited<ReturnType<typeof getRaid>>;
@@ -70,11 +71,25 @@ export const action: ActionFunction = async ({ request }) => {
 
   if (request.method !== "DELETE") {
     await createRaidTickRequest(BigInt(playerId), BigInt(raidId), ticks);
+    await createAuditLog({
+      userId: user.id,
+      type: AUDIT_TICK_REQUESTED,
+      ticks: ticks as any as number[],
+      from_player_id: BigInt(playerId),
+      raid_id: BigInt(raidId)
+    })
   } else if (
     request.method === "DELETE" &&
     ["admin"].includes(user?.role ?? "guest")
   ) {
     await deleteRaidTicks(BigInt(playerId), BigInt(raidId), ticks);
+    await createAuditLog({
+      userId: user.id,
+      type: AUDIT_TICK_REMOVED,
+      ticks: ticks as any as number[],
+      from_player_id: BigInt(playerId),
+      raid_id: BigInt(raidId)
+    })
   }
 
   return json({

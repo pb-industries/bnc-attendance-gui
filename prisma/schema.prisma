@@ -7,6 +7,47 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model audit {
+  id                                  BigInt    @id @default(autoincrement())
+  user_id                             BigInt
+  from_player_id                      BigInt?
+  to_player_id                        BigInt?
+  created_at                          DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at                          DateTime? @default(now()) @db.Timestamptz(6)
+  raid_id                             BigInt?
+  message                             String?   @db.VarChar(255)
+  type                                BigInt?
+  item_id                             BigInt?
+  player_audit_from_player_idToplayer player?   @relation("audit_from_player_idToplayer", fields: [from_player_id], references: [id], onDelete: Cascade, map: "audit_from_player_id_foreign")
+  item                                item?     @relation(fields: [item_id], references: [id], onDelete: Cascade, map: "audit_item_id_foreign")
+  raid                                raid?     @relation(fields: [raid_id], references: [id], onDelete: Cascade, map: "audit_raid_id_foreign")
+  player_audit_to_player_idToplayer   player?   @relation("audit_to_player_idToplayer", fields: [to_player_id], references: [id], onDelete: Cascade, map: "audit_to_player_id_foreign")
+  user                                user      @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "audit_user_id_foreign")
+}
+
+model guild {
+  id                BigInt    @id @default(autoincrement())
+  name              String    @unique(map: "guild_name_unique") @db.VarChar(255)
+  last_win_modifier Float?    @default(1.0) @db.Real
+  box_modifier      Float?    @default(1.0) @db.Real
+  created_at        DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime? @default(now()) @db.Timestamptz(6)
+  raid_days         Json?     @default("[]")
+  player            player[]
+}
+
+model item {
+  id           BigInt         @id @default(autoincrement())
+  name         String         @db.VarChar(255)
+  category     String?        @db.VarChar(255)
+  created_at   DateTime?      @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime?      @default(now()) @db.Timestamptz(6)
+  lucy_url     String         @db.VarChar(255)
+  lucy_id      String         @db.VarChar(255)
+  audit        audit[]
+  loot_history loot_history[]
+}
+
 model knex_migrations {
   id             BigInt    @id @default(autoincrement())
   name           String?   @db.VarChar(255)
@@ -17,6 +58,31 @@ model knex_migrations {
 model knex_migrations_lock {
   index     BigInt  @id @default(autoincrement())
   is_locked BigInt?
+}
+
+model loot_history {
+  id           BigInt    @id @default(autoincrement())
+  item_id      BigInt
+  looted_by_id BigInt
+  created_at   DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime? @default(now()) @db.Timestamptz(6)
+  raid_id      BigInt?
+  quantity     BigInt    @default(1)
+  looted_from  String?   @db.VarChar(255)
+  was_assigned Boolean?
+  item         item      @relation(fields: [item_id], references: [id], onDelete: Cascade, map: "loot_history_item_id_foreign")
+  player       player    @relation(fields: [looted_by_id], references: [id], onDelete: Cascade, map: "loot_history_looted_by_id_foreign")
+  raid         raid?     @relation(fields: [raid_id], references: [id], onUpdate: NoAction, map: "loot_history_raid_id_foreign")
+
+  @@unique([looted_by_id, created_at, item_id, raid_id], map: "loot_composite_idx")
+}
+
+model password {
+  hash       String    @db.VarChar(255)
+  user_id    BigInt    @unique(map: "password_user_id_unique")
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @default(now()) @db.Timestamptz(6)
+  user       user      @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "password_user_id_foreign")
 }
 
 model player {
@@ -31,12 +97,16 @@ model player {
   ticks_since_last_win                          BigInt?        @default(0)
   created_at                                    DateTime?      @default(now()) @db.Timestamptz(6)
   updated_at                                    DateTime?      @default(now()) @db.Timestamptz(6)
-  deleted_at                                    DateTime?      @default(now()) @db.Timestamptz(6)
   total_tickets                                 BigInt?
   rank                                          String?        @default("alt") @db.VarChar(255)
   guild_id                                      BigInt?        @default(758349347704963075)
   total_boxes                                   BigInt?        @default(0)
+  approved_at                                   DateTime?      @db.Timestamptz(6)
+  deleted_at                                    DateTime?      @db.Timestamptz(6)
+  base_tickets                                  BigInt?
   guild                                         guild?         @relation(fields: [guild_id], references: [id], map: "player_guild_id_foreign")
+  audit_audit_from_player_idToplayer            audit[]        @relation("audit_from_player_idToplayer")
+  audit_audit_to_player_idToplayer              audit[]        @relation("audit_to_player_idToplayer")
   loot_history                                  loot_history[]
   player_alt_playerToplayer_alt_alt_id          player_alt[]   @relation("playerToplayer_alt_alt_id")
   player_alt_playerToplayer_alt_player_id       player_alt[]   @relation("playerToplayer_alt_player_id")
@@ -67,6 +137,7 @@ model player_raid {
   raid       raid      @relation(fields: [raid_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "player_raid_raid_id_foreign")
 
   @@id([player_id, raid_id, raid_hour])
+  @@index([player_id], map: "player_id")
 }
 
 model raffle {
@@ -89,32 +160,13 @@ model raid {
   updated_at   DateTime?      @default(now()) @db.Timestamptz(6)
   split        String         @default("1") @db.VarChar(255)
   is_official  Boolean?       @default(true)
+  audit        audit[]
   loot_history loot_history[]
   player_raid  player_raid[]
   raffle       raffle[]
   request_tick request_tick[]
 
   @@unique([created_at, split], map: "raid_created_at_split_unique")
-}
-
-model password {
-  hash       String    @db.VarChar(255)
-  user_id    BigInt    @unique(map: "password_user_id_unique")
-  created_at DateTime? @default(now()) @db.Timestamptz(6)
-  updated_at DateTime? @default(now()) @db.Timestamptz(6)
-  user       user      @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "password_user_id_foreign")
-}
-
-model user {
-  id         BigInt    @id @default(autoincrement())
-  player_id  BigInt
-  email      String?   @unique(map: "user_email_unique") @db.VarChar(255)
-  created_at DateTime? @default(now()) @db.Timestamptz(6)
-  updated_at DateTime? @default(now()) @db.Timestamptz(6)
-  role       String?   @default("member") @db.VarChar(255)
-  approved   Boolean?  @default(false)
-  player     player    @relation(fields: [player_id], references: [id], onDelete: Cascade, map: "user_player_id_foreign")
-  password   password?
 }
 
 model request_tick {
@@ -135,38 +187,16 @@ model request_tick {
   @@id([player_id, raid_id, raid_hour])
 }
 
-model item {
-  id           BigInt         @id @default(autoincrement())
-  name         String         @db.VarChar(255)
-  category     String?        @db.VarChar(255)
-  created_at   DateTime?      @default(now()) @db.Timestamptz(6)
-  updated_at   DateTime?      @default(now()) @db.Timestamptz(6)
-  lucy_url     String         @db.VarChar(255)
-  lucy_id      String         @db.VarChar(255)
-  loot_history loot_history[]
-}
-
-model loot_history {
-  id           BigInt    @id @default(autoincrement())
-  item_id      BigInt
-  looted_by_id BigInt
-  created_at   DateTime? @default(now()) @db.Timestamptz(6)
-  updated_at   DateTime? @default(now()) @db.Timestamptz(6)
-  raid_id      BigInt?
-  quantity     BigInt    @default(1)
-  looted_from  String?   @db.VarChar(255)
-  was_assigned Boolean?
-  item         item      @relation(fields: [item_id], references: [id], onDelete: Cascade, map: "loot_history_item_id_foreign")
-  player       player    @relation(fields: [looted_by_id], references: [id], onDelete: Cascade, map: "loot_history_looted_by_id_foreign")
-  raid         raid?     @relation(fields: [raid_id], references: [id], onUpdate: NoAction, map: "loot_history_raid_id_foreign")
-}
-
-model guild {
-  id                BigInt    @id @default(autoincrement())
-  name              String    @unique(map: "guild_name_unique") @db.VarChar(255)
-  last_win_modifier Float?    @default(1.0) @db.Real
-  box_modifier      Float?    @default(1.0) @db.Real
-  created_at        DateTime? @default(now()) @db.Timestamptz(6)
-  updated_at        DateTime? @default(now()) @db.Timestamptz(6)
-  player            player[]
+model user {
+  id         BigInt    @id @default(autoincrement())
+  player_id  BigInt
+  email      String?   @unique(map: "user_email_unique") @db.VarChar(255)
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @default(now()) @db.Timestamptz(6)
+  role       String?   @default("member") @db.VarChar(255)
+  approved   Boolean?  @default(false)
+  bot_token  String?   @db.VarChar(255)
+  player     player    @relation(fields: [player_id], references: [id], onDelete: Cascade, map: "user_player_id_foreign")
+  audit      audit[]
+  password   password?
 }

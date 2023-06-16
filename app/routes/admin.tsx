@@ -10,6 +10,9 @@ import {
   getRecentActivity,
   getTickApprovals,
   rejectAccount,
+  createAuditLog,
+  AUDIT_TICK_APPROVED,
+  AUDIT_TICK_REJECTED,
 } from "~/models/admin.server";
 import {
   CheckIcon,
@@ -107,6 +110,13 @@ export const action: ActionFunction = async ({ request }) => {
         BigInt(raidId),
         BigInt(raidHour)
       );
+    await createAuditLog({
+      userId: user.id,
+      type: AUDIT_TICK_APPROVED,
+      ticks: [raidHour] as any as number[],
+      from_player_id: BigInt(playerId),
+      raid_id: BigInt(raidId)
+    })
       return json<ActionData>({
         alert: {
           type: "success",
@@ -134,6 +144,13 @@ export const action: ActionFunction = async ({ request }) => {
         BigInt(raidId),
         BigInt(raidHour)
       );
+      await createAuditLog({
+        userId: user.id,
+        type: AUDIT_TICK_REJECTED,
+        ticks: [raidHour] as any as number[],
+        from_player_id: BigInt(playerId),
+        raid_id: BigInt(raidId)
+      })
       return json<ActionData>({
         alert: {
           type: "success",

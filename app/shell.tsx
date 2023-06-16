@@ -143,6 +143,7 @@ export default function Shell() {
                               {["admin", "officer"].includes(
                                 user?.role ?? "guest"
                               ) ? (
+                                <>
                                 <Menu.Item>
                                   {({ active }) => (
                                     <Link
@@ -156,6 +157,20 @@ export default function Shell() {
                                     </Link>
                                   )}
                                 </Menu.Item>
+                                <Menu.Item>
+                                  {({ active }) => (
+                                    <Link
+                                      to="/audit-log"
+                                      className={classNames(
+                                        active ? "bg-gray-100" : "",
+                                        "block px-4 py-2 text-sm text-gray-700"
+                                      )}
+                                    >
+                                      Audit Log
+                                    </Link>
+                                  )}
+                                </Menu.Item>
+                                </>
                               ) : null}
                               <Menu.Item>
                                 {({ active }) => (
@@ -260,6 +275,8 @@ export default function Shell() {
                 </div>
                 <div className="border-t border-indigo-800 pt-4 pb-3">
                   <div className="px-2">
+                    { user ? (
+
                     <Disclosure.Button
                       as="a"
                       href="/profile"
@@ -267,7 +284,9 @@ export default function Shell() {
                     >
                       Your Profile
                     </Disclosure.Button>
+                    ): null}
                     {["admin", "officer"].includes(user?.role ?? "guest") ? (
+                      <>
                       <Disclosure.Button
                         as="a"
                         href="/admin"
@@ -275,7 +294,16 @@ export default function Shell() {
                       >
                         Admin Console
                       </Disclosure.Button>
+                      <Disclosure.Button
+                        as="a"
+                        href="/audit-log"
+                        className="block rounded-md px-3 py-2 text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-indigo-100"
+                      >
+                        Audit Log
+                      </Disclosure.Button>
+                      </>
                     ) : null}
+                    {user ? (
                     <Form action="/logout" method="post">
                       <button
                         type="submit"
@@ -284,6 +312,18 @@ export default function Shell() {
                         Log Out
                       </button>
                     </Form>
+
+                    ): (
+
+                    <Form action="/login" method="post">
+                      <button
+                        type="submit"
+                        className="mt-1 block w-full rounded-md px-3 py-2 text-left text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-indigo-100"
+                      >
+                        Login
+                      </button>
+                    </Form>
+                    )}
                   </div>
                 </div>
               </Disclosure.Panel>

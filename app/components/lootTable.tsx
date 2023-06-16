@@ -343,7 +343,7 @@ const LootTable: FC<LoaderData> = ({
           <Form className='flex gap-2' method="post">
             <input type='hidden' name='line_id' value={lh?.id ?? 0} />
             <input type='hidden' name='category' value='change_player' />
-            <select className='h-8 text-sm px-2 py-0 max-w-28 w-28' name='player_id'>
+            <select className='h-8 text-sm px-2 py-0 max-w-28 w-28 capitalize' name='player_id'>
               <option value={lh?.looted_by_id}>{lh?.looted_by_name}</option>
               {mains?.map(m => <option className={m.id === lh.looted_by_id ? "hidden" : ""} value={m.id}>{m.name}</option>)}
             </select>
@@ -351,7 +351,7 @@ const LootTable: FC<LoaderData> = ({
           </Form>
 
         ): (
-          <Link className="text-blue-500" to={`/players/${lh?.looted_by_id}`}>
+          <Link className="text-blue-500 capitalize" to={`/players/${lh?.looted_by_id}`}>
             {lh?.looted_by_name}
           </Link>
 
@@ -441,7 +441,6 @@ const LootTable: FC<LoaderData> = ({
                 className="ml-4 h-8 w-8 rounded-sm bg-red-500 p-1 text-white hover:bg-red-600"
               >
                 <XIcon />
-                OKI
               </button>
             </Form>
           </td>
@@ -453,8 +452,8 @@ const LootTable: FC<LoaderData> = ({
   return (
     <div className="grid min-h-[500px] grid-cols-12 gap-8">
       <div className="col-span-12">
-        <h1 className="text-2xl font-medium">Items looted</h1>
-        <div className="sticky top-[140px] z-10 flex justify-between border-b border-gray-100 bg-white pb-4">
+        <h1 className="sticky top-[60px] text-2xl font-medium">Items looted</h1>
+        <div className="sticky top-[60px] z-10 flex justify-between border-b border-gray-100 bg-white pb-4">
           <div className="flex gap-2 pt-4">
             {categories
               .filter((c) => (hideEmpty ? categoryCounts[c].total > 0 : true))
@@ -544,7 +543,7 @@ const LootTable: FC<LoaderData> = ({
                 <th
                   onClick={() => requestSort("looted_by_name")}
                   scope="col"
-                  className="font-semibolds hidden px-3 py-3.5 text-left text-sm text-gray-900 sm:table-cell"
+                  className="capitalize font-semibolds hidden px-3 py-3.5 text-left text-sm text-gray-900 sm:table-cell"
                 >
                   Looted by
                   {renderSortIndicator("looted_by_name")}

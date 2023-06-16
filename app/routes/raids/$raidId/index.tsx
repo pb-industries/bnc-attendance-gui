@@ -6,6 +6,7 @@ import { prisma } from "~/db.server";
 import { useState } from "react";
 import LootTable from "~/components/lootTable";
 import { getMains } from "~/models/roster.server";
+import { AUDIT_LOOT_CATEGORISED, AUDIT_LOOT_CHANGED, AUDIT_LOOT_DELETED, createAuditLog } from "~/models/admin.server";
 
 type LoaderData = { loot: Awaited<ReturnType<typeof getLootForRaid>>, mains: Awaited<ReturnType<typeof getMains>> };
 
@@ -21,7 +22,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 };
 
 export const action: ActionFunction = async ({ request, params }) => {
-  const user = requireUser(request);
+  const user = await requireUser(request);
   const formData = await request.formData();
 
   const itemId = BigInt(`${formData.get("item_id") ?? 0}`);
@@ -31,6 +32,11 @@ export const action: ActionFunction = async ({ request, params }) => {
     if (!lootId) {
       return null;
     }
+    await createAuditLog({
+      userId: user.id,
+      type: AUDIT_LOOT_DELETED,
+      loot_id: lootId,
+    })
     await prisma.loot_history.delete({
       where: {
         id: lootId,
@@ -49,6 +55,13 @@ export const action: ActionFunction = async ({ request, params }) => {
       return null
     }
 
+    await createAuditLog({
+      userId: user.id,
+      type: AUDIT_LOOT_CHANGED,
+      loot_id: lootId,
+      to_player_id: playerId
+    })
+
     await prisma.loot_history.update({
       where: { id: lootId },
       data: {
@@ -64,6 +77,13 @@ export const action: ActionFunction = async ({ request, params }) => {
   if (!user) {
     return null;
   }
+
+  await createAuditLog({
+    userId: user.id,
+    type: AUDIT_LOOT_CATEGORISED,
+    item_id: itemId,
+    newCategory: category
+  })
 
   await prisma.item.update({
     where: { id: itemId },

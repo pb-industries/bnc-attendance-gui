@@ -46,7 +46,7 @@ export const action: ActionFunction = async ({ request }) => {
   const playerName = formData.get("player.name")?.toString() ?? null;
   const playerClass = formData.get("player.class")?.toString() ?? null;
   const playerLevel =
-    parseInt(formData.get("player.level")?.toString() ?? "0") ?? 65;
+    parseInt(formData.get("player.level")?.toString() ?? "0") ?? 80;
   const redirectTo = safeRedirect(formData.get("redirectTo"), "/");
 
   if (!validateEmailOrUsername(email) && !validateEmailOrUsername(playerName)) {
@@ -255,7 +255,7 @@ export default function Join() {
                 type="number"
                 min="1"
                 max="150"
-                defaultValue="65"
+                defaultValue="80"
                 autoComplete="player.level"
                 aria-invalid={
                   actionData?.errors?.player?.level ? true : undefined

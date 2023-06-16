@@ -297,13 +297,28 @@ export async function createRaidTickRequest(
   }
 
   try {
-    return await prisma.request_tick.createMany({
-      data: raidHours.map((raidHour) => ({
-        player_id: BigInt(playerId),
-        raid_id: BigInt(raidId),
-        raid_hour: BigInt(raidHour),
-      })),
-    });
+    raidHours.map(async (raidHour) => {
+      await prisma.request_tick.upsert({
+        where: {
+          player_id_raid_id_raid_hour: {
+            player_id: BigInt(playerId),
+            raid_id: BigInt(raidId),
+            raid_hour: BigInt(raidHour),
+          }
+        },
+        update: {
+          approved_at: null,
+          approved_by: null,
+          rejected_by: null,
+          rejected_at: null,
+        },
+        create: {
+          player_id: BigInt(playerId),
+          raid_id: BigInt(raidId),
+          raid_hour: BigInt(raidHour),
+        }
+      })
+    })
   } catch (e) {
     return null;
   }

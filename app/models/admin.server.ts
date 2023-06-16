@@ -1,6 +1,14 @@
 import { prisma } from "~/db.server";
 import { calculateAttendance } from "./api.server";
 
+export const AUDIT_TICK_REMOVED = 0
+export const AUDIT_TICK_APPROVED = 1
+export const AUDIT_LOOT_CHANGED = 2
+export const AUDIT_LOOT_DELETED = 3
+export const AUDIT_LOOT_CATEGORISED = 4
+export const AUDIT_TICK_REJECTED = 5
+export const AUDIT_TICK_REQUESTED = 6
+
 export async function getPendingAccounts() {
   return await prisma.user.findMany({
     where: { approved: false },
@@ -132,4 +140,152 @@ export async function deleteRaidTick(
     },
   });
   calculateAttendance();
+}
+
+type props = {
+  userId: bigint,
+  type: number,
+  to_player_id?: bigint,
+  from_player_id?: bigint,
+  raid_id?: bigint,
+  ticks?: number[],
+  item_id?: bigint,
+  loot_id?: bigint,
+  newCategory?: string,
+  itemName?: string
+}
+
+export async function createAuditLog({
+  userId, type, to_player_id, from_player_id, raid_id, ticks, loot_id, newCategory, item_id
+}: props) {
+  let from_player;
+  let to_player;
+  let raid;
+  let message;
+  let user;
+  let loot;
+  let item;
+
+  if (userId) {
+    user = await prisma.user.findFirst({ where: { id: userId }, include: { player: true }})
+    user = user?.player
+  }
+
+  if (item_id) {
+    item = await prisma.item.findFirst({ where: { id: item_id }})
+  }
+
+  if (loot_id) {
+    loot = await prisma.loot_history.findFirst({ where: { id: loot_id }, include: { item: true, player: true }})
+  }
+
+  if (to_player_id) {
+    to_player = await prisma.player.findFirst({ where: { id: to_player_id }})
+  }
+
+  if (from_player_id) {
+    from_player = await prisma.player.findFirst({ where: { id: from_player_id }})
+  }
+
+  if (raid_id) {
+    raid = await prisma.raid.findFirst({ where: { id: raid_id }})
+  }
+
+  switch (type) {
+    case AUDIT_TICK_REMOVED:
+      message = `un[${user?.name}] removed ticks [${ticks?.join(', ')}] from fn[${from_player?.name}] for raid rn[${raid?.name}]`
+    break;
+    case AUDIT_TICK_APPROVED:
+      message = `un[${user?.name}] approved a request for tick ${ticks?.join(', ')} from fn[${from_player?.name}] for raid rn[${raid?.name}]`
+    break;
+    case AUDIT_TICK_REJECTED:
+      message = `un[${user?.name}] rejected a request for tick ${ticks?.join(', ')} from fn[${from_player?.name}] for raid rn[${raid?.name}]`
+    break;
+    case AUDIT_TICK_REQUESTED:
+      const behalfOf = user?.id !== from_player?.id ? ` on behalf of fn[${from_player?.name}] ` : ' '
+      message = `un[${user?.name}] requested ticks ${ticks?.join(', ')}${behalfOf}for raid rn[${raid?.name}]`
+    break;
+    case AUDIT_LOOT_CATEGORISED:
+      message = `un[${user?.name}] re-categorised item in[${item?.name}] from ${item?.category ?? 'unknown'} to ${newCategory}`
+    break;
+    case AUDIT_LOOT_CHANGED:
+      message = `un[${user?.name}] moved the assignment of ${loot?.item?.name} from fn[${loot?.player?.name}] to tn[${to_player?.name}]`
+    break;
+    case AUDIT_LOOT_DELETED:
+      message = `un[${user?.name}] deleted a loot line of ${loot?.item?.name} which was assigned to fn[${loot?.player?.name}]`
+    break;
+  }
+
+
+  let payload: any = {
+    user_id: userId,
+    type,
+    message,
+    created_at: new Date(),
+    updated_at: new Date()
+  }
+
+  if (loot) {
+    payload.item_id = loot.item_id
+  }
+
+  if (item_id) {
+    payload.item_id = item_id
+  }
+
+  if (from_player) {
+    payload.from_player_id = from_player.id
+  }
+
+  if (raid) {
+    payload.raid_id = raid.id
+  }
+
+  if (to_player) {
+    payload.to_player_id = to_player.id
+  }
+
+  await prisma.audit.create({
+    data: payload
+  })
+}
+
+export async function getAuditLog({
+  page = 0,
+  pageSize = 10,
+  type = undefined
+}: {
+  page?: number;
+  pageSize?: number;
+  type?: number[];
+}) {
+  let query = {}
+  if (type !== undefined) {
+    query = {
+      type: {
+        in: type
+      }
+    }
+  }
+  const auditLog = await prisma.audit.findMany({
+    take: pageSize,
+    skip: page * pageSize,
+    where: query,
+    include: {
+      user: {
+        include: {
+          player: true
+        }
+      },
+      item: true,
+      raid: true,
+      player_audit_from_player_idToplayer: true,
+      player_audit_to_player_idToplayer: true
+    },
+    orderBy: {
+      id: 'desc'
+    }
+  })
+
+  return { auditLog, totalResults: await prisma.audit.count({ where: query }) };
 }
