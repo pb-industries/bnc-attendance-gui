@@ -82,7 +82,7 @@ const handleBoxEditAction = async (
   };
 
   if (["admin", "officer"].includes(user?.role ?? "guest")) {
-    const rank = ["alt", "raider"].includes(playerRank ?? "")
+    const rank = ["alt", "raider", "support"].includes(playerRank ?? "")
       ? playerRank?.trim().toLowerCase()
       : "raider";
     player.rank = rank;
@@ -289,6 +289,8 @@ export default function RaidIndexPage() {
                       className={`inline-block flex-shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
                         box?.rank === "raider"
                           ? "bg-purple-100 text-purple-800"
+                          : box?.rank === "support"
+                          ? "bg-orange-100 text-orange-800"
                           : "bg-gray-100 text-gray-800"
                       }`}
                     >

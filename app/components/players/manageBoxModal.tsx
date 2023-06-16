@@ -208,6 +208,7 @@ const AddBoxModal: FC<ManageBoxModalProps> = ({
                       >
                         <option className="capitalize">alt</option>
                         <option className="capitalize">raider</option>
+                        <option className="capitalize">support</option>
                       </select>
                     </div>
                   </div>
