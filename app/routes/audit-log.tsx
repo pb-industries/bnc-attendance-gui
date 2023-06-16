@@ -80,7 +80,7 @@ export const loader: LoaderFunction = async ({ request }) => {
 
   const url = new URL(request.url);
   const page = parseInt(url?.searchParams.get("page") ?? "0");
-  const pageSize = parseInt(url.searchParams.get("pageSize") ?? "10");
+  const pageSize = parseInt(url.searchParams.get("pageSize") ?? "12");
 
   const { auditLog, totalResults } = await getAuditLog({
     page,
@@ -197,7 +197,7 @@ export default function logIndexPage() {
           </div>
           <div className="flex flex-1 justify-between gap-2 sm:justify-end">
             <Link
-              to={`/auditLog?page=${Math.max(0, page - 1)}`}
+              to={`/audit-log?page=${Math.max(0, page - 1)}`}
               className={`relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 ${
                 page === 0 ? "cursor-not-allowed opacity-50" : ""
               }`}
@@ -205,7 +205,7 @@ export default function logIndexPage() {
               Previous
             </Link>
             <Link
-              to={"/auditLog?page=" + (page + 1)}
+              to={"/audit-log?page=" + (page + 1)}
               className={`relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 ${
                 auditLog.length < pageSize ? "cursor-not-allowed opacity-50" : ""
               }`}
