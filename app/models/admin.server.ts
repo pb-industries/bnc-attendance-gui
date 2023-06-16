@@ -209,10 +209,10 @@ export async function createAuditLog({
       message = `un[${user?.name}] re-categorised item in[${item?.name}] from ${item?.category ?? 'unknown'} to ${newCategory}`
     break;
     case AUDIT_LOOT_CHANGED:
-      message = `un[${user?.name}] moved the assignment of ${loot?.item?.name} from fn[${loot?.player?.name}] to tn[${to_player?.name}]`
+      message = `un[${user?.name}] moved the assignment of in[${loot?.item?.name}] from fn[${loot?.player?.name}] to tn[${to_player?.name}]`
     break;
     case AUDIT_LOOT_DELETED:
-      message = `un[${user?.name}] deleted a loot line of ${loot?.item?.name} which was assigned to fn[${loot?.player?.name}]`
+      message = `un[${user?.name}] deleted a loot line of in[${loot?.item?.name}] which was assigned to fn[${loot?.player?.name}]`
     break;
   }
 
