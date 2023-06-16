@@ -175,16 +175,25 @@ export async function createAuditLog({
     item = await prisma.item.findFirst({ where: { id: item_id }})
   }
 
-  if (loot_id) {
-    loot = await prisma.loot_history.findFirst({ where: { id: loot_id }, include: { item: true, player: true }})
-  }
-
   if (to_player_id) {
     to_player = await prisma.player.findFirst({ where: { id: to_player_id }})
   }
 
   if (from_player_id) {
     from_player = await prisma.player.findFirst({ where: { id: from_player_id }})
+  }
+
+  if (loot_id) {
+    loot = await prisma.loot_history.findFirst({ where: { id: loot_id }, include: { item: true, player: true }})
+    if (!from_player_id) {
+      from_player_id = loot?.looted_by_id
+      from_player = loot?.player
+    }
+
+    if (!item_id) {
+      item_id = loot?.item_id
+      item = loot?.item
+    }
   }
 
   if (raid_id) {
@@ -209,13 +218,12 @@ export async function createAuditLog({
       message = `un[${user?.name}] re-categorised item in[${item?.name}] from ${item?.category ?? 'unknown'} to ${newCategory}`
     break;
     case AUDIT_LOOT_CHANGED:
-      message = `un[${user?.name}] moved the assignment of in[${loot?.item?.name}] from fn[${loot?.player?.name}] to tn[${to_player?.name}]`
+      message = `un[${user?.name}] moved the assignment of in[${item?.name}] from fn[${from_player?.name}] to tn[${to_player?.name}]`
     break;
     case AUDIT_LOOT_DELETED:
-      message = `un[${user?.name}] deleted a loot line of in[${loot?.item?.name}] which was assigned to fn[${loot?.player?.name}]`
+      message = `un[${user?.name}] deleted a loot line of in[${item?.name}] which was assigned to fn[${from_player?.name}]`
     break;
   }
-
 
   let payload: any = {
     user_id: userId,

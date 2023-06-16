@@ -59,7 +59,7 @@ export const action: ActionFunction = async ({ request, params }) => {
       userId: user.id,
       type: AUDIT_LOOT_CHANGED,
       loot_id: lootId,
-      to_player_id: playerId
+      to_player_id: playerId,
     })
 
     await prisma.loot_history.update({
