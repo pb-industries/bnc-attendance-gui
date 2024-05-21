@@ -95,9 +95,8 @@ export async function getRaid({ id }: Pick<raid, "id">) {
   };
 }
 
-export async function getCurrencySplitMeta(raidId: bigint)
-{
-  const mainIds = (await getMainIds(raidId)).join(',')
+export async function getCurrencySplitMeta(raidId: bigint) {
+  const mainIds = (await getMainIds(raidId)).join(",");
   const data = await prisma.$queryRawUnsafe(
     `
     SELECT
@@ -129,14 +128,15 @@ export async function getCurrencySplitMeta(raidId: bigint)
     ) rt ON rt.raid_id = ${BigInt(raidId).toString()}
     INNER JOIN player p ON pr.main_id = p.id
     WHERE pr.raid_id = ${BigInt(raidId).toString()}
-  `)
+  `
+  );
 
-  const total_tickets = data.reduce((c, d) => c + d.awarded_tickets, 0)
-  const split_info = data.map(d => {
-    return { player_id, name, awarded_tickets, class: d.class } = d
-  })
+  const total_tickets = data.reduce((c, d) => c + d.awarded_tickets, 0);
+  const split_info = data.map((d) => {
+    return ({ player_id, name, awarded_tickets, class: d.class } = d);
+  });
 
-  return { total_tickets, split_info }
+  return { total_tickets, split_info };
 }
 
 export async function getRaidTicks(raidId: bigint) {
@@ -148,6 +148,7 @@ export async function getRaidTicks(raidId: bigint) {
     FROM player_raid pr
     WHERE pr.raid_id = ${BigInt(raidId).toString()}
     GROUP BY pr.raid_hour
+    ORDER BY pr.raid_hour ASC
   `
   )) as { raid_hour: string; created_at: string }[];
 
@@ -163,8 +164,7 @@ interface RaidWithTotals extends raid {
   attended_ticks: number;
 }
 
-async function getMainIds(raidId: bigint)
-{
+async function getMainIds(raidId: bigint) {
   const attendees = await prisma.player_raid.findMany({
     where: {
       AND: [{ raid_id: BigInt(raidId) }],
@@ -194,7 +194,6 @@ async function getMainIds(raidId: bigint)
       })
     )
   );
-
 }
 
 export async function getRaids({
@@ -304,7 +303,7 @@ export async function createRaidTickRequest(
             player_id: BigInt(playerId),
             raid_id: BigInt(raidId),
             raid_hour: BigInt(raidHour),
-          }
+          },
         },
         update: {
           approved_at: null,
@@ -316,9 +315,9 @@ export async function createRaidTickRequest(
           player_id: BigInt(playerId),
           raid_id: BigInt(raidId),
           raid_hour: BigInt(raidHour),
-        }
-      })
-    })
+        },
+      });
+    });
   } catch (e) {
     return null;
   }

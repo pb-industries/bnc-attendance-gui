@@ -11,7 +11,8 @@ export async function getMains(exclude_deleted = true) {
       player_alt_playerToplayer_alt_player_id: true,
     },
     where: {
-      NOT: [{ guild_id: null }],
+      // BNC hardocde for now
+      guild_id: BigInt(`758349347704963075`),
       user: { some: { NOT: [{ player_id: undefined }] } },
     },
     orderBy: {
@@ -23,7 +24,7 @@ export async function getMains(exclude_deleted = true) {
     // Get the optional name/id of the main
     const mainId = player.player_alt_playerToplayer_alt_alt_id?.[0]?.player_id;
     if (exclude_deleted && player.deleted_at) {
-      return false
+      return false;
     }
 
     return !mainId || mainId === player.id;
