@@ -32,7 +32,7 @@ export const links: LinksFunction = () => {
 
 export const meta: MetaFunction = () => ({
   charset: "utf-8",
-  title: "Big Natural Crits",
+  title: "Mango Surprise!",
   viewport: "width=device-width,initial-scale=1",
 });
 
