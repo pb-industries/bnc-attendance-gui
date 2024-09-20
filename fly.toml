@@ -1,4 +1,4 @@
-app = "bnc-app"
+app = "mango-app"
 kill_signal = "SIGINT"
 kill_timeout = 5
 processes = [ ]

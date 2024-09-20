@@ -12,7 +12,7 @@ export async function getMains(exclude_deleted = true) {
     },
     where: {
       // BNC hardocde for now
-      guild_id: BigInt(`758349347704963075`),
+      guild_id: BigInt(`1005187024723410946`),
       user: { some: { NOT: [{ player_id: undefined }] } },
     },
     orderBy: {
@@ -41,7 +41,7 @@ export async function getMainsAtTick(raidId: bigint, tick?: bigint) {
           },
           where: { raid_id: raidId },
         })
-      )?._max?.raid_hour || 0
+      )?._max?.raid_hour || 0,
     );
   }
   const attendees = await prisma.player_raid.findMany({
@@ -70,8 +70,8 @@ export async function getMainsAtTick(raidId: bigint, tick?: bigint) {
         }
 
         return mainId;
-      })
-    )
+      }),
+    ),
   );
 
   const mAtTick = prisma.player.findMany({
@@ -159,7 +159,7 @@ export async function isBoxAssociatedWith(playerId: bigint, altId: bigint) {
 export async function createBox(
   player: player,
   mainId: bigint,
-  playerId?: bigint
+  playerId?: bigint,
 ) {
   let existingPlayer;
   let boxId = null;

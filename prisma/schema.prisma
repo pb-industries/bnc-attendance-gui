@@ -99,7 +99,7 @@ model player {
   updated_at                                    DateTime?      @default(now()) @db.Timestamptz(6)
   total_tickets                                 BigInt?
   rank                                          String?        @default("alt") @db.VarChar(255)
-  guild_id                                      BigInt?        @default(758349347704963075)
+  guild_id                                      BigInt?        @default(1005187024723410946)
   total_boxes                                   BigInt?        @default(0)
   approved_at                                   DateTime?      @db.Timestamptz(6)
   deleted_at                                    DateTime?      @db.Timestamptz(6)
