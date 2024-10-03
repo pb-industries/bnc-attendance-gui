@@ -57,9 +57,9 @@ export default function Shell() {
                     <div className="flex-shrink-0">
                       <Link to="/">
                         <img
-                          className="h-8 w-auto"
-                          src="/images/bnc.png"
-                          alt="Workflow"
+                          className="h-12 w-auto rounded-full"
+                          src="/images/mango.png"
+                          alt="Mango Surprise Logo"
                         />
                       </Link>
                     </div>
